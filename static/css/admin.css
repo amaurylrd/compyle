@@ -1,0 +1,11 @@
+.module.technical-info .field-created_at,
+.module.technical-info .field-updated_at {
+    display: inline-block;
+    width: 45%;
+    margin-left: 0;
+    margin-right: 7%;
+}
+
+.module.technical-info .field-updated_at {
+    margin-right: 0;
+}

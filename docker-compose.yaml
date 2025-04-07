@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres
+    hostname: postgres
+    volumes:
+      - compyle_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: "compyle"
+      POSTGRES_USER: "compyle"
+      POSTGRES_PASSWORD: "compyle"
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+
+  rabbitmq:
+    image: bitnami/rabbitmq:3.11.8
+    environment:
+      RABBITMQ_DEFAULT_USER: "compyle"
+      RABBITMQ_DEFAULT_PASS: "compyle"
+      TZ: Europe/Paris
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  compyle_postgres_data:
