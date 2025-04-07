@@ -1,0 +1,15 @@
+*
+!compyle/
+!gunicorn.py
+!manage.py
+!pyproject.toml
+!poetry.toml
+!poetry.lock
+!README.md
+compyle/settings/current.py
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.DS_Store
+**/.gitignore
