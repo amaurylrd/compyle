@@ -1,0 +1,27 @@
+[
+    {
+        "model": "proxy.service",
+        "pk": "31d86fee-4832-463f-a207-a0d67ad2d327",
+        "fields": {
+            "name": "Twitch",
+            "trailing_slash": false,
+            "auth_flow": "client credentials",
+            "token_url": "https://id.twitch.tv/oauth2",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "proxy.endpoint",
+        "pk": "7a0ad639-4f7b-4221-9f69-03d556013df2",
+        "fields": {
+            "service": "31d86fee-4832-463f-a207-a0d67ad2d327",
+            "name": "Game",
+            "base_url": "https://api.twitch.tv/helix",
+            "slug": "/games",
+            "method": "get",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    }
+]

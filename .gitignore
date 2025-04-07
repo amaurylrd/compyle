@@ -16,6 +16,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+!compyle/lib
 parts/
 sdist/
 var/
@@ -172,3 +173,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+static/
+!static/css/
+.dist/
+celery*.bak
+celery*.dat
+celery*.dir
