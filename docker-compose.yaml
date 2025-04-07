@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres
+    hostname: postgres
+    volumes:
+      - compyle_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_HOST: "postgres"
+      POSTGRES_DB: "compyle"
+      POSTGRES_USER: "compyle"
+      POSTGRES_PASSWORD: "compyle"
+    ports:
+      - "5432:5432"
+
+volumes:
+  compyle_postgres_data:
