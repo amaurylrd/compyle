@@ -1,0 +1,134 @@
+[tool.poetry]
+name = "compyle"
+version = "0.1.0-alpha.1"
+description = "Twitch Compyle is an app that allows you to create Youtube compilations of the latest Twitch clips on your favorite games."
+authors = ["amaurylrd <amaurylrd@users.noreply.github.com>"]
+
+repository = "https://github.com/amaurylrd/twitch_compyle"
+documentation = "https://google.com"
+packages = [{include = "compyle"}]
+readme = "README.md"
+license = "Apache-2.0"
+classifiers = [
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Version Control :: Git",
+    "Topic :: Utilities",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.10",
+    "License :: Other/Proprietary License",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Unix",
+]
+
+[tool.poetry.dependencies]
+python = "~3.10"
+python-semantic-release = "^8.0.0"
+python-dotenv = "^1.0.0"
+
+django = ">=5.2,<5.3"
+djangorestframework = "^3.16"
+django-cryptography = "^1.1"
+django-admin-action-tools = "^1.2.0"
+django-cors-headers = "^4.0.0"
+django-filter = "^2.4.0"
+django-object-actions = "^4.2"
+django-json-widget = "^2.0.1"
+
+psycopg2 = { extras = ["binary", "pool"], version = "^2.9.10"}
+psycopg2-binary = "^2.9.10"
+gunicorn = "^23.0"
+
+toml = "^0.10.2"
+tomli = "^2.0.1"
+
+celery = "^5.4"
+redis = "^5.0.8"
+cachetools = "^5.5.0"
+
+drf-spectacular = "^0.28.0"
+drf-standardized-errors = { extras = ["openapi"], version = "^0.14.1" }
+
+requests = "^2.25.1"
+urllib3 = ">=1.26.0"
+cryptography = "^44.0.0"
+requests-oauthlib = "^2.0.0"
+# setuptools = "^74.1.2"
+
+[tool.poetry.group.tools]
+optional = true
+
+[tool.poetry.group.pre-commit.dependencies]
+pre-commit = "^3.1"
+
+[tool.poetry.group.lint.dependencies]
+mypy = "^1.11.2"
+black = "^24.0.0"
+
+pydocstyle = "6.3.0"
+pylama = "^8.4.1"
+pylint = "~3.3.0"
+pylint-django = "^2.5.3"
+
+django-stubs = ">=5.1.1"
+djangorestframework-stubs = { version = "^3.14.0", extras = [
+    "compatible-mypy",
+] }
+
+types-cachetools = "^5.5.0.20240820"
+
+[tool.poetry.group.tools.dependencies]
+black = "^24.0.0"
+pyupgrade = "^3.3.1"
+
+[tool.poetry.group.docs.dependencies]
+m2r2 = "^0.3"
+sphinx = "^7.2"
+sphinx-autoapi = "^3.0.0"
+sphinx-rtd-theme = "^2.0"
+sphinxcontrib-django = "^2.2"
+sphinxcontrib-httpdomain = "^1.8"
+sphinxcontrib-mermaid = "^0.9"
+
+[tool.poetry.group.test.dependencies]
+faker = "^23.0.0"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.2.0"]
+
+[tool.isort]
+profile = "black"
+known_first_party = "compyle"
+
+[tool.mypy]
+exclude = "tests"
+check_untyped_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+python_version = "3.11"
+show_error_codes = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_return_any = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_incomplete_defs = false
+disallow_untyped_decorators = false
+
+[tool.black]
+exclude = '''
+(
+    /(
+        \.git
+        |\.venv
+    )/
+)
+'''
+include = '\.pyi?$'
+line-length = 120
+
+[tool.codespell]
+skip = '*.po,poetry.lock,openapi.yml,CHANGELOG.md,**/fixtures/*,**/migrations/*,'

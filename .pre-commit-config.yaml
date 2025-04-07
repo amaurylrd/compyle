@@ -1,0 +1,95 @@
+default_stages: [pre-commit]
+default_language_version:
+  node: "20.11.1"
+  python: "python3.10"
+repos:
+  - repo: https://github.com/MarcoGorelli/absolufy-imports
+    rev: "v0.3.1"
+    hooks:
+      - id: absolufy-imports
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.16.0
+    hooks:
+      - id: pyupgrade
+        args: ["--py310-plus"]
+
+  - repo: https://github.com/ambv/black-pre-commit-mirror
+    rev: "24.4.2"
+    hooks:
+      - id: black
+        language_version: python3.10
+
+  - repo: https://github.com/klen/pylama
+    rev: "8.4.1"
+    hooks:
+      - id: pylama
+        additional_dependencies: ["pylama[toml]"]
+
+  - repo: https://github.com/pycqa/isort
+    rev: "5.13.2"
+    hooks:
+      - id: isort
+        args:
+          - "-m=VERTICAL_HANGING_INDENT"
+          - "--combine-as"
+          - "--profile=black"
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.6.0"
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-ast
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: "v1.3.3"
+    hooks:
+      - id: python-safety-dependencies-check
+        files: pyproject.toml
+        args:
+          - "--disable-audit-and-monitor"
+          - "--ignore=51457,64396,64459,65213"
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: "v1.10.0"
+    hooks:
+      - id: python-no-log-warn
+      - id: python-check-mock-methods
+      - id: python-no-eval
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.7.9"
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["bandit[toml]"]
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.16.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-angular"]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: "v2.3.0"
+    hooks:
+      - id: codespell
+        args: ["-w"]
+        additional_dependencies:
+          - tomli
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/remastr/pre-commit-django-check-migrations
+    rev: v0.1.0
+    hooks:
+      - id: check-migrations-created
+        args: [--exec-command=poetry run python, --manage-path=./manage.py]
+        files: "^compyle/.*\\.py$"
