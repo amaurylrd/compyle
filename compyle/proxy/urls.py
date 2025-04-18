@@ -4,9 +4,8 @@ from rest_framework.routers import DefaultRouter
 from compyle.proxy import views
 
 router = DefaultRouter()
-# router.register(r"messages", views.MessageViewSet, basename="messages")
-# router.register(r"traces", views.TraceViewSet, basename="traces")
-# router.register(r"trace_attempts", views.TraceAttemptViewSet, basename="trace_attempts")
+router.register(r"services", views.ServiceViewSet, basename="services")
+router.register(r"endpoints", views.EndpointViewSet, basename="endpoints")
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("", include(router.urls)),

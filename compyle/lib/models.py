@@ -19,8 +19,8 @@ class CreateUpdateMixin:
     )
 
 
-class BaseModel(CreateUpdateMixin, models.Model):
-    """A base model class that extends CreateUpdateMixin and provides a reference field as pk."""
+class BaseModel(models.Model):
+    """A base model class that provides a reference field as pk."""
 
     reference = models.CharField(
         verbose_name=_("reference"),
@@ -32,4 +32,3 @@ class BaseModel(CreateUpdateMixin, models.Model):
 
     class Meta:
         abstract = True
-        ordering = ["updated_at"]
