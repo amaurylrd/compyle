@@ -15,7 +15,7 @@ classifiers = [
     "Topic :: Utilities",
     "Intended Audience :: Developers",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.10",
     "License :: Other/Proprietary License",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Operating System :: Unix",
@@ -35,7 +35,7 @@ django-filter = "^2.4.0"
 django-object-actions = "^4.2"
 django-json-widget = "^2.0.1"
 
-psycopg2 = "^2.9.10"
+psycopg2 = { extras = ["binary", "pool"], version = "^2.9.10"}
 psycopg2-binary = "^2.9.10"
 gunicorn = "^23.0"
 
@@ -50,7 +50,7 @@ drf-spectacular = "^0.28.0"
 drf-standardized-errors = { extras = ["openapi"], version = "^0.14.1" }
 
 requests = "^2.25.1"
-# cryptography = "^42.0.0"
+cryptography = "^44.0.0"
 # setuptools = "^74.1.2"
 
 [tool.poetry.group.tools]
@@ -87,6 +87,9 @@ sphinx-rtd-theme = "^2.0"
 sphinxcontrib-django = "^2.2"
 sphinxcontrib-httpdomain = "^1.8"
 sphinxcontrib-mermaid = "^0.9"
+
+[tool.poetry.group.test.dependencies]
+faker = "^23.0.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

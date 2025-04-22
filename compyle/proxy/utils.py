@@ -1,5 +1,9 @@
+from io import BufferedReader
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
-
+import requests
+from requests.adapters import HTTPAdapter
+from rest_framework import status
+from urllib3.util import Retry
 
 def extract_url_params(url: str) -> list[tuple[str, str]]:
     """Extracts the parameters from the specified URL.
@@ -66,3 +70,51 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
         return url[:-1]
 
     return url
+
+def request_with_retry(
+    method,
+    url: str,
+    retries: int = 3,
+    backoff: float | None = 0.5,
+    jitter: float | None = 0.5,
+    timeout: float | None = None,
+    **request, 
+) -> requests.Response:
+    with requests.Session() as session:
+        strategery = Retry(
+            total=retries,
+            backoff_factor=backoff,
+            backoff_jitter=jitter,
+            status_forcelist=[
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status.HTTP_502_BAD_GATEWAY,
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                status.HTTP_504_GATEWAY_TIMEOUT,
+            ],
+        )
+        adapter = HTTPAdapter(max_retries=strategery)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+        try:
+            response = method(url, **request, timeout=timeout)
+            response.raise_for_status()
+            # response.status_code
+            # elapsed = response.elapsed_total_seconds()
+        except requests.exceptions.RequestException as error:
+            raise error
+        
+def request(
+    method,
+    url,
+    headers: dict[str, str] | None = None,
+    body: str | None = None,
+    json: bool = True,
+):
+    if method in (HttpMethod.GET, HttpMethod.HEAD):
+        response = request_with_retry(method, url, headers=headers)
+    else:
+        response = request_with_retry(method, url, headers=headers, data=body)
+
+    return response.json() if json else response
+    # may raise requests.exceptions.JSONDecodeError

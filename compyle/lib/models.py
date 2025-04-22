@@ -3,6 +3,8 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from compyle.lib.validators import ReferenceValidator
+
 
 class CreateUpdateMixin:
     """A mixin class that provides automatic tracking of creation and update timestamps."""
@@ -28,7 +30,11 @@ class BaseModel(models.Model):
         max_length=255,
         default=uuid.uuid4,
         primary_key=True,
+        validators=[ReferenceValidator()],
     )
 
     class Meta:
         abstract = True
+
+    def __str__(self) -> str:
+        return self.reference

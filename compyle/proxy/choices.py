@@ -81,20 +81,18 @@ class StatusType(TextChoices):
         return None
 
 
-class AuthType(TextChoices):
-    """This enum represents high-level authentication types supported by a service."""
+class AuthFlow(TextChoices):
+    """This enum represents high-level authentication flow supported by a service."""
 
-    NONE = "none", pgettext_lazy("authentification type", "No Auth")
-    API_KEY = "api_key", pgettext_lazy("authentification type", "API Key")
-    BEARER = "bearer", pgettext_lazy("authentification type", "Bearer Token")
-    OAUTH2 = "oauth2", pgettext_lazy("authentification type", "OAuth2")
+    API_KEY = "api_key", pgettext_lazy("authentification type", "API key")
+    BASIC_AUTHENTICATION = "basic_authentication", pgettext_lazy("authentication type", "Basic authentication")
+    OAUTH2_AUTHORIZATION_CODE = "authorization code", pgettext_lazy("authentification type", "Authorization code")
+    OAUTH2_ClIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentification type", "Client credentials")
 
 
 class AuthMethod(TextChoices):
     """This specific authentication mechanisms used at the endpoint level."""
 
-    NO_AUTHENTICATION = "no_authentication", pgettext_lazy("authentication method", "No authentication")
-    BASIC_AUTHENTICATION = "basic_authentication", pgettext_lazy("authentication method", "Basic authentication")
     OAUTH_PASSWORD_AUTHENTICATION = "oauth_password_authentication", pgettext_lazy(
         "authentication method", "OAuth authentication (grant type 'password')"
     )
@@ -102,5 +100,12 @@ class AuthMethod(TextChoices):
         "authentication method", "OAuth authentication (grant type 'client_credentials')"
     )
 
+# twitch
+# - get_token = grant_type: client_cred
+# - refresh = auth: bearer OAuth2 token
+
+# yt
+# get_token: grant_type: authorizatin_code
+# refresh: grant_type refresh
 
 # TODO https://git.spikeelabs.fr/spk/code/unyc/distributor/distributor-app/-/blob/main/event_broker/traceability/components/auth.py

@@ -1,8 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django_cryptography.fields import encrypt
 
 from compyle.lib.models import BaseModel, CreateUpdateMixin
-from compyle.proxy.choices import AuthType, HttpMethod, StatusType
+from compyle.proxy.choices import AuthMethod, AuthFlow, HttpMethod, StatusType
 from compyle.proxy.utils import build_url, normalize_url
 
 
@@ -20,13 +21,14 @@ class Service(BaseModel, CreateUpdateMixin):
         default=False,
         blank=True,
     )
-    auth_type = models.CharField(
+    auth_flow = models.CharField(
         verbose_name=_("authenfication type"),
         help_text=_("Tells how to authenticate against the service."),
-        choices=AuthType.choices,
-        default=AuthType.NONE,
-        max_length=255,
+        choices=AuthFlow.choices,
+        default=None,
+        null=True,
         blank=True,
+        max_length=255,
     )
     # todo token_url
     # todo refresh_token_url
@@ -40,37 +42,6 @@ class Service(BaseModel, CreateUpdateMixin):
 
     def __str__(self) -> str:
         return self.name
-
-
-# class ServiceAuth(BaseModel):
-#     # todo doc
-
-#     api_key = models.CharField(
-#         verbose_name=_("api key"),
-#         help_text=_("The static API key if used.")),
-#         max_length=255,
-#         default=None,
-#         null=True,
-#         blank=True,
-#     )
-#     client_id = models.CharField(max_length=255, blank=True, help_text=_("OAuth2 Client ID."))
-#     client_secret = models.CharField(max_length=255, blank=True, help_text=_("OAuth2 Client Secret."))
-
-#     service = models.OneToOneField(Service, related_name="auth", on_delete=models.CASCADE)
-#     class Meta:
-#         verbose_name = _("service")
-# #         verbose_name_plural = _("services")
-# class UserCredential(BaseModel):
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="api_credentials")
-#     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="user_credentials")
-
-#     access_token = models.CharField(max_length=512)
-#     refresh_token = models.CharField(max_length=512, blank=True, null=True)
-#     expires_at = models.DateTimeField(blank=True, null=True)
-
-#     def __str__(self):
-#         return f"{self.user} - {self.service}"
-# TODO encrypt https://git.spikeelabs.fr/spk/code/unyc/distributor/distributor-app/-/blob/main/event_broker/configuration/models.py?ref_type=heads
 
 
 class Endpoint(BaseModel, CreateUpdateMixin):
@@ -109,6 +80,15 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         default=True,
         blank=True,
     )
+    auth_method = models.CharField(
+        verbose_name=_("authenfication method"),
+        help_text=_("The authification method to be used."),
+        choices=AuthMethod.choices,
+        default=None,
+        null=True,
+        blank=True,
+        max_length=255,
+    )
 
     service = models.ForeignKey(
         verbose_name=_("service"),
@@ -119,7 +99,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         null=True,
         blank=True,
     )
-    traces: models.QuerySet["Trace"]
+    endpoint_traces: models.QuerySet["Trace"]
 
     class Meta:
         verbose_name = _("endpoint")
@@ -176,21 +156,32 @@ class Trace(BaseModel):
     headers = models.JSONField(
         verbose_name=_("headers"),
         help_text=_("The headers associated with the HTTP request or response."),
+        default=dict,
         blank=True,
         null=True,
     )
     payload = models.JSONField(
         verbose_name=_("payload"),
         help_text=_("The body of the request or response JSON-formatted."),
+        default=None,
         blank=True,
         null=True,
     )
+    # TODO params
 
     endpoint = models.ForeignKey(
         verbose_name=_("endpoint"),
         help_text=_("The endpoint of the trace."),
         to=Endpoint,
-        related_name="traces",
+        related_name="endpoint_traces",
+        on_delete=models.CASCADE,
+    )
+    # TODO can be null
+    user = models.ForeignKey(
+        verbose_name=_("user"),
+        help_text=_("The authenficiation provided for the trace."),
+        to="AuthUser",
+        related_name="user_traces",
         on_delete=models.CASCADE,
     )
 
@@ -198,3 +189,104 @@ class Trace(BaseModel):
         verbose_name = _("trace")
         verbose_name_plural = _("traces")
         ordering = ["started_at"]
+
+
+class AuthUser(BaseModel, CreateUpdateMixin):
+    # TODO docstring
+
+    email = models.CharField(
+        verbose_name=_("email"),
+        help_text=_("The user unique email."),
+        primary_key=True,
+        max_length=255,
+    )
+    login = encrypt(
+        models.CharField(
+            verbose_name=_("login"),
+            help_text=_("The user login issued to the client during the application registration process."),
+            max_length=255,
+            default=None,
+            null=True,
+            blank=True,
+        )
+    )
+    password = encrypt(
+        models.CharField(
+            verbose_name=_("password"),
+            help_text=_("The user password issued to the client during the application registration process."),
+            max_length=255,
+            default=None,
+            null=True,
+            blank=True,
+        )
+    )
+    client_id = encrypt(
+        models.CharField(
+            verbose_name=_("client id"),
+            help_text=_("The client identifier issued to the client during the application registration process."),
+            max_length=255,
+            default=None,
+            null=True,
+            blank=True,
+        )
+    )
+    client_secret = encrypt(
+        models.CharField(
+            verbose_name=_("client secret"),
+            help_text=_("The client secret issued to the client during the application registration process."),
+            max_length=255,
+            default=None,
+            null=True,
+            blank=True,
+        )
+    )
+    api_key = encrypt(
+        models.CharField(
+            verbose_name=_("api key"),
+            help_text=_("The static API key."),
+            max_length=255,
+            default=None,
+            null=True,
+            blank=True,
+        )
+    )
+
+    # TODO
+    # autorization_code (add encrypt?)
+    # token_type
+    # redirect_uri
+
+    # todo add encrypt ?
+    access_token = models.CharField(
+        verbose_name=_("access token"),
+        help_text=_("The access token to be used for authentification."),
+        max_length=512,
+        default=None,
+        null=True,
+        blank=True,
+    )
+    expires_at = models.DateTimeField(
+        verbose_name=("expires at"),
+        help_text=_("The datetime the access token will expire."),
+        default=None,
+        blank=True,
+        null=True
+    )
+    refresh_token = models.CharField(
+        verbose_name=_("refresh token"),
+        help_text=_("The refresh token to be used for refreshing the access token."),
+        max_length=512,
+        default=None,
+        null=True,
+        blank=True,
+    )
+
+    user_traces: models.QuerySet["Trace"]
+
+    class Meta:
+        verbose_name = _("authentification user")
+        verbose_name_plural = _("authentification users")
+
+# TODO lien entre user / trace ?
+# TODO method request header selon auth_flow / auth_method
+# TODO comment dire d'ajouter le client_id dans le header par exemple
