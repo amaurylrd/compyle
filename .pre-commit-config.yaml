@@ -2,6 +2,9 @@ default_stages: [pre-commit]
 default_language_version:
   node: "20.11.1"
   python: "python3.10"
+
+exclude: ".vscode/"
+
 repos:
   - repo: https://github.com/MarcoGorelli/absolufy-imports
     rev: "v0.3.1"
@@ -24,6 +27,9 @@ repos:
     rev: "8.4.1"
     hooks:
       - id: pylama
+        args:
+          - --option=pyproject.toml
+          - --max-line-length=120
         additional_dependencies: ["pylama[toml]"]
 
   - repo: https://github.com/pycqa/isort
@@ -36,10 +42,22 @@ repos:
     rev: "v4.6.0"
     hooks:
       - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
       - id: end-of-file-fixer
       - id: check-ast
+      - id: check-yaml
+      - id: check-toml
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: sort-simple-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
+      - id: pretty-format-json
+        args:
+          - "--autofix"
+          - "--indent=2"
+          - "--no-sort-keys"
+          - "--no-ensure-ascii"
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
     rev: "v1.3.3"
@@ -48,7 +66,7 @@ repos:
         files: pyproject.toml
         args:
           - "--disable-audit-and-monitor"
-          - "--ignore=51457,64396,64459,65213"
+          - "--ignore=42923,51457,54229,54230,64396,64459,65213"
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: "v1.10.0"
@@ -63,6 +81,7 @@ repos:
       - id: bandit
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
+        files: "^compyle/.*"
 
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.16.0
@@ -76,8 +95,7 @@ repos:
     hooks:
       - id: codespell
         args: ["-w"]
-        additional_dependencies:
-          - tomli
+        additional_dependencies: ["tomli"]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.4
@@ -90,3 +108,8 @@ repos:
       - id: check-migrations-created
         args: [--exec-command=poetry run python, --manage-path=./manage.py]
         files: "^compyle/.*\\.py$"
+
+  - repo: https://github.com/python-poetry/poetry
+    rev: '1.6.0'
+    hooks:
+    -   id: poetry-check

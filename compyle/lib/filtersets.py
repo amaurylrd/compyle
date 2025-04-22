@@ -1,5 +1,6 @@
-from django_filters import FilterSet, DateTimeFilter
 from django.utils.translation import gettext_lazy as _
+from django_filters import DateTimeFilter, FilterSet
+
 
 class CreateUpdateFilterSet(FilterSet):
     """Base filterset to add created/updated filters to model that inherits from the CreateUpdateMixin."""

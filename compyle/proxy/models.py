@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django_cryptography.fields import encrypt
 
 from compyle.lib.models import BaseModel, CreateUpdateMixin
-from compyle.proxy.choices import AuthMethod, AuthFlow, HttpMethod, StatusType
+from compyle.proxy.choices import AuthFlow, AuthMethod, HttpMethod, StatusType
 from compyle.proxy.utils import build_url, normalize_url
 
 
@@ -147,7 +147,7 @@ class Trace(BaseModel):
     )
     status_type = models.CharField(
         verbose_name=_("status type"),
-        help_text=_("The category of the resposne status code."),
+        help_text=_("The category of the response status code."),
         choices=StatusType.choices,
         max_length=255,
         default=None,
@@ -176,13 +176,15 @@ class Trace(BaseModel):
         related_name="endpoint_traces",
         on_delete=models.CASCADE,
     )
-    # TODO can be null
     user = models.ForeignKey(
         verbose_name=_("user"),
         help_text=_("The authenficiation provided for the trace."),
         to="AuthUser",
         related_name="user_traces",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        default=None,
     )
 
     class Meta:
@@ -197,7 +199,7 @@ class AuthUser(BaseModel, CreateUpdateMixin):
     email = models.CharField(
         verbose_name=_("email"),
         help_text=_("The user unique email."),
-        primary_key=True,
+        unique=True,
         max_length=255,
     )
     login = encrypt(
@@ -259,7 +261,7 @@ class AuthUser(BaseModel, CreateUpdateMixin):
     # todo add encrypt ?
     access_token = models.CharField(
         verbose_name=_("access token"),
-        help_text=_("The access token to be used for authentification."),
+        help_text=_("The access token to be used for authentication."),
         max_length=512,
         default=None,
         null=True,
@@ -270,7 +272,7 @@ class AuthUser(BaseModel, CreateUpdateMixin):
         help_text=_("The datetime the access token will expire."),
         default=None,
         blank=True,
-        null=True
+        null=True,
     )
     refresh_token = models.CharField(
         verbose_name=_("refresh token"),
@@ -284,9 +286,10 @@ class AuthUser(BaseModel, CreateUpdateMixin):
     user_traces: models.QuerySet["Trace"]
 
     class Meta:
-        verbose_name = _("authentification user")
-        verbose_name_plural = _("authentification users")
+        verbose_name = _("authentication user")
+        verbose_name_plural = _("authentication users")
+
 
 # TODO lien entre user / trace ?
 # TODO method request header selon auth_flow / auth_method
-# TODO comment dire d'ajouter le client_id dans le header par exemple
+# TODO comment dire d'ajouter le client_id dans le header par example

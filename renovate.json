@@ -1,10 +1,10 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-        "github>renovatebot/.github"
-    ],
-    "enabledManagers": [
-        "poetry",
-        "pre-commit"
-    ]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>renovatebot/.github"
+  ],
+  "enabledManagers": [
+    "poetry",
+    "pre-commit"
+  ]
 }

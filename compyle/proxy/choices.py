@@ -10,6 +10,8 @@ from rest_framework import status
 class HttpMethod(TextChoices):
     """This enum represents the HTTP methods supported by the API."""
 
+    HEAD = "head", pgettext_lazy("http method", "HEAD")
+    GET = "get", pgettext_lazy("http method", "GET")
     POST = "post", pgettext_lazy("http method", "POST")
     PUT = "put", pgettext_lazy("http method", "PUT")
     PATCH = "path", pgettext_lazy("http method", "PATCH")
@@ -84,10 +86,10 @@ class StatusType(TextChoices):
 class AuthFlow(TextChoices):
     """This enum represents high-level authentication flow supported by a service."""
 
-    API_KEY = "api_key", pgettext_lazy("authentification type", "API key")
+    API_KEY = "api_key", pgettext_lazy("authentication type", "API key")
     BASIC_AUTHENTICATION = "basic_authentication", pgettext_lazy("authentication type", "Basic authentication")
-    OAUTH2_AUTHORIZATION_CODE = "authorization code", pgettext_lazy("authentification type", "Authorization code")
-    OAUTH2_ClIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentification type", "Client credentials")
+    OAUTH2_AUTHORIZATION_CODE = "authorization code", pgettext_lazy("authentication type", "Authorization code")
+    OAUTH2_ClIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentication type", "Client credentials")
 
 
 class AuthMethod(TextChoices):
@@ -99,6 +101,7 @@ class AuthMethod(TextChoices):
     OAUTH_CLIENT_CREDENTIALS_AUTHENTICATION = "oauth_client_credentials_authentication", pgettext_lazy(
         "authentication method", "OAuth authentication (grant type 'client_credentials')"
     )
+
 
 # twitch
 # - get_token = grant_type: client_cred

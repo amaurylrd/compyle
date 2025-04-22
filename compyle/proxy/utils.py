@@ -1,9 +1,13 @@
-from io import BufferedReader
+from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
 import requests
 from requests.adapters import HTTPAdapter
 from rest_framework import status
 from urllib3.util import Retry
+
+from compyle.proxy.choices import HttpMethod
+
 
 def extract_url_params(url: str) -> list[tuple[str, str]]:
     """Extracts the parameters from the specified URL.
@@ -71,6 +75,7 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
 
     return url
 
+
 def request_with_retry(
     method,
     url: str,
@@ -78,7 +83,7 @@ def request_with_retry(
     backoff: float | None = 0.5,
     jitter: float | None = 0.5,
     timeout: float | None = None,
-    **request, 
+    **request,
 ) -> requests.Response:
     with requests.Session() as session:
         strategery = Retry(
@@ -97,20 +102,21 @@ def request_with_retry(
         session.mount("https://", adapter)
 
         try:
-            response = method(url, **request, timeout=timeout)
+            response: requests.Response = method(url, **request, timeout=timeout)
             response.raise_for_status()
             # response.status_code
             # elapsed = response.elapsed_total_seconds()
         except requests.exceptions.RequestException as error:
             raise error
-        
+
+
 def request(
-    method,
-    url,
+    method: HttpMethod,
+    url: str,
     headers: dict[str, str] | None = None,
-    body: str | None = None,
+    body: dict[str, str] | None = None,
     json: bool = True,
-):
+) -> Any:
     if method in (HttpMethod.GET, HttpMethod.HEAD):
         response = request_with_retry(method, url, headers=headers)
     else:

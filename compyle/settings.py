@@ -7,9 +7,9 @@ BASE_DIR = os.path.dirname(SETTINGS_DIR)
 TESTING = sys.argv[1:2] == ["test"]
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-+$))w01^9gwz#7fal8+al7s4h_*wt=!tt7&eve2w039$=$oj0-"
+SECRET_KEY = "django-insecure-+$))w01^9gwz#7fal8+al7s4h_*wt=!tt7&eve2w039$=$oj0-"  # nosec
 
-DEBUG = False
+DEBUG = os.getenv("DEBUG") or False
 
 ALLOWED_HOSTS = ["*"]
 

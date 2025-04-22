@@ -1,14 +1,16 @@
-from faker import Faker
 from datetime import datetime
 
-from compyle.proxy import choices, models
+from faker import Faker
+
 from compyle.lib.factories import DEFAULT, sequence
+from compyle.proxy import choices, models
 
 _FAKER = Faker()
 SERVICE_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-service-{i}")
 ENDPOINT_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-endpoint-{i}")
 TRACE_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-trace-{i}")
 USER_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-user-{i}")
+
 
 def get_service(
     *,
@@ -63,7 +65,7 @@ def get_endpoint(
         commit = commit_related
     if commit and not commit_related:  # pragma: no cover
         raise ValueError("cannot commit when related models are not committed")
-    
+
     if reference is DEFAULT:
         reference = next(ENDPOINT_REFERENCE_SEQUENCE)
 
@@ -79,7 +81,7 @@ def get_endpoint(
         json = True
     if auth_method is DEFAULT:
         auth_method = None
-    
+
     if service is DEFAULT:
         service = get_service(commit=commit_related)
 
@@ -98,7 +100,8 @@ def get_endpoint(
         endpoint.save()
 
     return endpoint
-    
+
+
 def get_trace(
     *,
     commit: bool = DEFAULT,
@@ -160,6 +163,7 @@ def get_trace(
         trace.save()
 
     return trace
+
 
 def get_user(
     *,

@@ -9,7 +9,6 @@ from compyle.lib.filtersets import CreateUpdateFilterSet
 # https://git.spikeelabs.fr/spk/code/unyc/distributor/distributor-app/-/blob/main/event_broker/traceability/filtersets.py?ref_type=heads
 
 
-    
 class ServiceFilterSet(CreateUpdateFilterSet):
     """Filterset for :class:`compyle.proxy.models.Service`."""
 
