@@ -1,17 +1,19 @@
 import os
 import sys
+from urllib.parse import quote
 
 SETTINGS_DIR = os.path.dirname(__file__)
 BASE_DIR = os.path.dirname(SETTINGS_DIR)
 
 TESTING = sys.argv[1:2] == ["test"]
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-+$))w01^9gwz#7fal8+al7s4h_*wt=!tt7&eve2w039$=$oj0-"  # nosec
 
 DEBUG = os.getenv("DEBUG") or False
 
 ALLOWED_HOSTS = ["*"]
+USE_X_FORWARDED_HOST = True
+APPEND_SLASH = False
 
 # Application definition
 
@@ -76,8 +78,77 @@ DRF_STANDARDIZED_ERRORS = {
     "ENABLE_IN_DEBUG_FOR_UNHANDLED_EXCEPTIONS": True,
 }
 
+# Celery configuration
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html
 
-WSGI_APPLICATION = "compyle.wsgi.application"
+BROKER_USER = quote(os.environ.get("CELERY_BROKER_USER", "compyle"))
+BROKER_PASSWORD = quote(os.environ.get("CELERY_BROKER_PASSWORD", "compyle"))
+BROKER_HOST = os.environ.get("CELERY_BROKER_HOST", "localhost")
+BROKER_PORT = os.environ.get("CELERY_BROKER_PORT", "5672")
+BROKER_VHOST = quote(os.environ.get("CELERY_BROKER_VHOST", "compyle"))
+BROKER_PROTOCOL = os.environ.get("CELERY_BROKER_PROTOCOL", "amqp")
+
+CELERY_BROKER_URL = f"{BROKER_PROTOCOL}://{BROKER_USER}:{BROKER_PASSWORD}@{BROKER_HOST}:{BROKER_PORT}/{BROKER_VHOST}"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
+CELERY_ACKS_LATE = True
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_WORKER_MAX_TASKS_PER_CHILD = int(os.getenv("CELERY_WORKER_MAX_TASKS_PER_CHILD", "100"))
+CELERY_TASK_RETRY_MAX = int(os.getenv("CELERY_TASK_RETRY_MAX", "3"))
+CELERY_TASK_RETRY_DELAY = int(os.getenv("CELERY_TASK_RETRY_DELAY", "60"))
+CELERY_TIMEZONE = "UTC"
+
+# Redis configuration
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html#std:setting-REDIS_URL
+
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_USER = os.getenv("REDIS_USER")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+# Channels configuration
+# https://channels.readthedocs.io/en/stable/topics/channel_layers.html#redis-channel-layer
+
+ASGI_APPLICATION = "compyle.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            # https://redis.readthedocs.io/en/latest/connections.html#redis.Redis
+            "hosts": [
+                {
+                    "host": REDIS_HOST,
+                    "port": REDIS_PORT,
+                    "username": REDIS_USER,
+                    "password": REDIS_PASSWORD,
+                    "health_check_interval": 10,
+                    "socket_connect_timeout": 5,
+                    "socket_keepalive": True,
+                    "retry_on_timeout": True,
+                }
+            ],
+        },
+    },
+}
+
+if not TESTING:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": os.getenv("CACHE_REDIS_URL", "redis://127.0.0.1:6379"),
+            "OPTIONS": {
+                "parser_class": "redis.connection.PythonParser",
+                "pool_class": "redis.BlockingConnectionPool",
+            },
+            "TIMEOUT": int(os.getenv("CACHE_TIMEOUT", "120")),
+        }
+    }
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -179,4 +250,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 RENDERER_MEDIA_NAME = "compyle"
 
-# globals().update(locals())
+globals().update(locals())

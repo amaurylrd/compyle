@@ -77,13 +77,14 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
 
 
 def request_with_retry(
-    method,
+    method: HttpMethod,
     url: str,
     retries: int = 3,
-    backoff: float | None = 0.5,
-    jitter: float | None = 0.5,
-    timeout: float | None = None,
-    **request,
+    backoff: float = 0.5,
+    jitter: float = 0.5,
+    timeout: float = None,
+    headers: dict[str, str] = None,
+    body: dict[str, Any] = None,
 ) -> requests.Response:
     with requests.Session() as session:
         strategery = Retry(
@@ -102,25 +103,9 @@ def request_with_retry(
         session.mount("https://", adapter)
 
         try:
-            response: requests.Response = method(url, **request, timeout=timeout)
+            response: requests.Response = method(url, headers=headers, data=body, timeout=timeout)
             response.raise_for_status()
-            # response.status_code
-            # elapsed = response.elapsed_total_seconds()
         except requests.exceptions.RequestException as error:
             raise error
 
-
-def request(
-    method: HttpMethod,
-    url: str,
-    headers: dict[str, str] | None = None,
-    body: dict[str, str] | None = None,
-    json: bool = True,
-) -> Any:
-    if method in (HttpMethod.GET, HttpMethod.HEAD):
-        response = request_with_retry(method, url, headers=headers)
-    else:
-        response = request_with_retry(method, url, headers=headers, data=body)
-
-    return response.json() if json else response
-    # may raise requests.exceptions.JSONDecodeError
+        return response

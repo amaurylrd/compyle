@@ -1,10 +1,14 @@
+from typing import Any
+
+import requests
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_cryptography.fields import encrypt
 
 from compyle.lib.models import BaseModel, CreateUpdateMixin
-from compyle.proxy.choices import AuthFlow, AuthMethod, HttpMethod, StatusType
-from compyle.proxy.utils import build_url, normalize_url
+from compyle.proxy.choices import AuthFlow, AuthMethod, HttpMethod
+from compyle.proxy.utils import build_url, normalize_url, request_with_retry
 
 
 class Service(BaseModel, CreateUpdateMixin):
@@ -50,7 +54,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
     name = models.CharField(
         verbose_name=_("name"),
         help_text=_("The endpoint name, for a more human display."),
-        max_length=255,
+        max_length=100,
         unique=True,
     )
     base_url = models.URLField(
@@ -60,7 +64,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
     slug = models.CharField(
         verbose_name=_("slug"),
         help_text=_("The endpoint slug to be append to base URL."),
-        max_length=255,
+        max_length=50,
     )
     method = models.CharField(
         verbose_name=_("method"),
@@ -80,6 +84,12 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         default=True,
         blank=True,
     )
+    xml = models.BooleanField(
+        verbose_name=_("xml"),
+        help_text=_("Indicates whether the endpoint is expected to return a XML response."),
+        default=False,
+        blank=True,
+    )
     auth_method = models.CharField(
         verbose_name=_("authenfication method"),
         help_text=_("The authification method to be used."),
@@ -95,9 +105,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         help_text=_("The service of the endpoint."),
         to=Service,
         related_name="endpoints",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.CASCADE,
     )
     endpoint_traces: models.QuerySet["Trace"]
 
@@ -120,6 +128,40 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         """
         return normalize_url(build_url(self.base_url, self.slug, **params), self.service.trailling_slash)
 
+    def request(
+        self,
+        url: str,
+        headers: dict[str, str] = None,
+        body: dict[str, Any] = None,
+    ) -> requests.Response:
+        """Request the endpoint with the specified parameters.
+
+        Args:
+            url: The URL to be used for the request.
+            headers: The headers to be used for the request. Defaults to None.
+            params: The parameters to be used for the request. Defaults to None.
+            body: The body to be used for the request. Defaults to None.
+
+        Returns:
+            The response of the request.
+        """
+        return request_with_retry(self.method, url, headers=headers, body=body)
+
+    def parse_response(self, response: requests.Response) -> Any:
+        """Parse the response based on the expected content type.
+
+        Args:
+            response: The response to be parsed.
+
+        Returns:
+            The parsed response content.
+        """
+        if self.json:
+            return response.json()
+        if self.xml:
+            return response.content
+        return response.text
+
 
 class Trace(BaseModel):
     """This class sepresents a trace of an HTTP request and response for debugging, logging, or auditing purposes."""
@@ -136,22 +178,12 @@ class Trace(BaseModel):
         null=True,
         blank=True,
     )
-    status = models.CharField(
-        verbose_name=_("status"),
-        help_text=_("The status name of the request response."),
-        max_length=50,
-    )
     status_code = models.IntegerField(
         verbose_name=_("status code"),
         help_text=_("The status code of the request response."),
-    )
-    status_type = models.CharField(
-        verbose_name=_("status type"),
-        help_text=_("The category of the response status code."),
-        choices=StatusType.choices,
-        max_length=255,
         default=None,
         null=True,
+        blank=True,
     )
     headers = models.JSONField(
         verbose_name=_("headers"),
@@ -167,7 +199,13 @@ class Trace(BaseModel):
         blank=True,
         null=True,
     )
-    # TODO params
+    params = models.JSONField(
+        verbose_name=_("parameters"),
+        help_text=_("The parameters sent in the request."),
+        default=None,
+        blank=True,
+        null=True,
+    )
 
     endpoint = models.ForeignKey(
         verbose_name=_("endpoint"),
@@ -176,11 +214,11 @@ class Trace(BaseModel):
         related_name="endpoint_traces",
         on_delete=models.CASCADE,
     )
-    user = models.ForeignKey(
-        verbose_name=_("user"),
-        help_text=_("The authenficiation provided for the trace."),
-        to="AuthUser",
-        related_name="user_traces",
+    authentication = models.ForeignKey(
+        verbose_name=_("authentication"),
+        help_text=_("The authentication provided for the trace."),
+        to="Authentication",
+        related_name="auth_traces",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -193,8 +231,8 @@ class Trace(BaseModel):
         ordering = ["started_at"]
 
 
-class AuthUser(BaseModel, CreateUpdateMixin):
-    # TODO docstring
+class Authentication(BaseModel, CreateUpdateMixin):
+    """This class represents an authentication to be used for a specific endpoint call."""
 
     email = models.CharField(
         verbose_name=_("email"),
@@ -283,13 +321,19 @@ class AuthUser(BaseModel, CreateUpdateMixin):
         blank=True,
     )
 
-    user_traces: models.QuerySet["Trace"]
+    auth_traces: models.QuerySet["Trace"]
 
     class Meta:
-        verbose_name = _("authentication user")
-        verbose_name_plural = _("authentication users")
+        verbose_name = _("authentication")
+        verbose_name_plural = _("authentications")
 
+    def update_token(self, token: dict[str, Any]) -> None:
+        """Update the access token and refresh token.
 
-# TODO lien entre user / trace ?
-# TODO method request header selon auth_flow / auth_method
-# TODO comment dire d'ajouter le client_id dans le header par example
+        Args:
+            token: The token dictionary containing the access token and refresh token.
+        """
+        self.access_token = token["access_token"]
+        self.refresh_token = token.get("refresh_token")
+        self.expires_at = timezone.now() + timezone.timedelta(seconds=token.get("expires_in", 3600))
+        self.save()

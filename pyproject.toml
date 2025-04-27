@@ -49,6 +49,7 @@ drf-spectacular = "^0.28.0"
 drf-standardized-errors = { extras = ["openapi"], version = "^0.14.1" }
 
 requests = "^2.25.1"
+urllib3 = ">=1.26.0"
 cryptography = "^44.0.0"
 # setuptools = "^74.1.2"
 django-cryptography-5 = "^2.0.3"
