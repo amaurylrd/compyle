@@ -4,7 +4,6 @@ from typing import Any
 import requests
 from django.db.models import TextChoices
 from django.utils.translation import pgettext_lazy
-from rest_framework import status
 
 
 class HttpMethod(TextChoices):
@@ -49,38 +48,6 @@ class HttpMethod(TextChoices):
         return self.func.__str__()
 
 
-class StatusType(TextChoices):
-    """This enum represents response status type from the status code."""
-
-    INFORMATIONAL = "informational", pgettext_lazy("status type", "Informational")
-    SUCCESS = "success", pgettext_lazy("status type", "Success")
-    REDIRECT = "redirect", pgettext_lazy("status type", "Redirect")
-    CLIENT_ERROR = "client_error", pgettext_lazy("status type", "Client error")
-    SERVER_ERROR = "server_error", pgettext_lazy("status type", "Server error")
-
-    @classmethod
-    def from_code(cls, status_code: int) -> "StatusType":
-        """Returns the status category based on the HTTP status code.
-
-        Args:
-            status_code (int): The HTTP status code.
-
-        Returns:
-            StatusType: Corresponding category as a string.
-        """
-        if status.is_informational(status_code):
-            return cls.INFORMATIONAL
-        if status.is_success(status_code):
-            return cls.SUCCESS
-        if status.is_redirect(status_code):
-            return cls.REDIRECT
-        if status.is_client_error(status_code):
-            return cls.CLIENT_ERROR
-        if status.is_server_error(status_code):
-            return cls.SERVER_ERROR
-        return None
-
-
 class AuthFlow(TextChoices):
     """This enum represents high-level authentication flow supported by a service."""
 
@@ -99,6 +66,7 @@ class AuthMethod(TextChoices):
     OAUTH_CLIENT_CREDENTIALS_AUTHENTICATION = "oauth_client_credentials_authentication", pgettext_lazy(
         "authentication method", "OAuth authentication (grant type 'client_credentials')"
     )
+
 
 # twitch
 # - get_token = grant_type: client_cred

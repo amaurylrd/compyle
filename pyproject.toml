@@ -50,7 +50,9 @@ drf-spectacular = "^0.28.0"
 drf-standardized-errors = { extras = ["openapi"], version = "^0.14.1" }
 
 requests = "^2.25.1"
+urllib3 = ">=1.26.0"
 cryptography = "^44.0.0"
+requests-oauthlib = "^2.0.0"
 # setuptools = "^74.1.2"
 
 [tool.poetry.group.tools]
@@ -65,7 +67,7 @@ black = "^24.0.0"
 
 pydocstyle = "6.3.0"
 pylama = "^8.4.1"
-pylint = "~3.1.0"
+pylint = "~3.3.0"
 pylint-django = "^2.5.3"
 
 django-stubs = ">=5.1.1"

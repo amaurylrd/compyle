@@ -3,7 +3,7 @@ from collections.abc import Callable, Generator
 from typing import Any, TypeVar
 
 
-class __Default:
+class __Default:  # pylint: disable=invalid-name
     pass
 
 
@@ -13,7 +13,7 @@ This object represents a default value for factories.
 This allows the default to be hidden from the signature and for ``None`` to be specified as a value.
 """
 
-T = TypeVar("T")
+T = TypeVar("T")  # pylint: disable=invalid-name
 
 
 def sequence(func: Callable[[int], T]) -> Generator[T, None, None]:

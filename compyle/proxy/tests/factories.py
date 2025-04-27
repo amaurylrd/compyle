@@ -1,8 +1,9 @@
-from faker import Faker
 from datetime import datetime
 
-from compyle.proxy import choices, models
+from faker import Faker
+
 from compyle.lib.factories import DEFAULT, sequence
+from compyle.proxy import choices, models
 
 _FAKER = Faker()
 SERVICE_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-service-{i}")
@@ -10,6 +11,8 @@ ENDPOINT_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-endpoint-{i}")
 TRACE_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-trace-{i}")
 USER_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-user-{i}")
 
+
+# pylint: disable=missing-function-docstring
 def get_service(
     *,
     commit: bool = DEFAULT,
@@ -44,6 +47,7 @@ def get_service(
     return service
 
 
+# pylint: disable=missing-function-docstring
 def get_endpoint(
     *,
     commit: bool = DEFAULT,
@@ -63,7 +67,7 @@ def get_endpoint(
         commit = commit_related
     if commit and not commit_related:  # pragma: no cover
         raise ValueError("cannot commit when related models are not committed")
-    
+
     if reference is DEFAULT:
         reference = next(ENDPOINT_REFERENCE_SEQUENCE)
 
@@ -79,7 +83,7 @@ def get_endpoint(
         json = True
     if auth_method is DEFAULT:
         auth_method = None
-    
+
     if service is DEFAULT:
         service = get_service(commit=commit_related)
 
@@ -98,7 +102,9 @@ def get_endpoint(
         endpoint.save()
 
     return endpoint
-    
+
+
+# pylint: disable=missing-function-docstring
 def get_trace(
     *,
     commit: bool = DEFAULT,
@@ -106,13 +112,11 @@ def get_trace(
     reference: str = DEFAULT,
     started_at: datetime = DEFAULT,
     completed_at: datetime = DEFAULT,
-    status: str = DEFAULT,
     status_code: int = DEFAULT,
-    status_type: choices.StatusType | None = DEFAULT,
     headers: dict = DEFAULT,
     payload: dict = DEFAULT,
     endpoint: models.Endpoint = DEFAULT,
-    user: models.AuthUser = DEFAULT,
+    user: models.Authentication = DEFAULT,
 ) -> models.Trace:
     if commit_related is DEFAULT:
         commit_related = True
@@ -129,12 +133,8 @@ def get_trace(
         pass
     if completed_at is DEFAULT:
         pass
-    if status is DEFAULT:
-        pass
     if status_code is DEFAULT:
         pass
-    if status_type is DEFAULT:
-        status_type = None
     if headers is DEFAULT:
         headers = {}
     if payload is DEFAULT:
@@ -143,13 +143,11 @@ def get_trace(
     if endpoint is DEFAULT:
         endpoint = get_endpoint(commit=commit_related)
     if user is DEFAULT:
-        user = get_user(commit=commit_related)
+        user = get_authentication(commit=commit_related)
 
     trace = models.Trace(
         reference=reference,
-        status=status,
         status_code=status_code,
-        status_type=status_type,
         headers=headers,
         payload=payload,
         endpoint=endpoint,
@@ -161,18 +159,20 @@ def get_trace(
 
     return trace
 
-def get_user(
+
+# pylint: disable=missing-function-docstring
+def get_authentication(
     *,
     commit: bool = DEFAULT,
     reference: str = DEFAULT,
-) -> models.AuthUser:
+) -> models.Authentication:
     if commit is DEFAULT:
         commit = True
 
     if reference is DEFAULT:
         reference = next(USER_REFERENCE_SEQUENCE)
 
-    user = models.AuthUser(
+    user = models.Authentication(
         reference=reference,
     )
 
