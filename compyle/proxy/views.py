@@ -1,11 +1,11 @@
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, response, status, viewsets
 from rest_framework.decorators import action
 
 from compyle.lib.views import BaseModelViewSet
-from compyle.proxy import exceptions, filtersets, models, serializers
+from compyle.proxy import filtersets, models, serializers
 from compyle.proxy.tasks import async_request
 
 
@@ -42,10 +42,8 @@ class EndpointViewSet(BaseModelViewSet):
         description=_("Action for triggering an endpoint request."),
         request=serializers.RequestSerializer,
         responses={
+            status.HTTP_404_NOT_FOUND: {},
             status.HTTP_202_ACCEPTED: serializers.RequestSerializer,
-            status.HTTP_412_PRECONDITION_FAILED: OpenApiResponse(
-                response=exceptions.RequestPreconditionResponseSerializer,
-            ),
         },
     )
     @action(detail=True, methods=["post"], url_path="request")
@@ -59,9 +57,6 @@ class EndpointViewSet(BaseModelViewSet):
             The response object.
         """
         endpoint = self.get_object()
-
-        if not endpoint.active:
-            raise exceptions.RequestArchived
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -93,24 +88,15 @@ class TraceViewSet(viewsets.ReadOnlyModelViewSet[models.Trace]):
     ordering_fields = ["reference", "status_code", "started_at", "completed_at"]
 
 
-# class DynamicAPIProxyView(View):
-#     def get(self, request, *args, **kwargs):
-#         path_parts = request.path.strip("/").split("/")
-#         if len(path_parts) < 2:
-#             return JsonResponse({"error": "Invalid route"}, status=400)
+class AuthenticationViewSet(BaseModelViewSet):
+    """Viewset for :class:`compyle.proxy.models.Authentication`."""
 
-#         service, endpoint = path_parts[:2]
-#         query_params = request.GET.dict()
-#         status, data = dispatch_request(service, endpoint, query_params)
-#         return JsonResponse(data, status=status)
+    queryset = models.Authentication.objects.all().prefetch_related("auth_traces")
+    # serializer_class = serializers.AuthenticationSerializer # TODO
+    serializer_classes = {}
 
-# class ProxyServiceView(views.ModelViewSet):
-#     model =
-# def get(self, request, service, resource):
-#     try:
-#         service_class = get_service_class(service)
-#         instance = service_class()
-#         result = instance.call(resource, **request.query_params)
-#         return JsonResponse(result)
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    # filterset_class = filtersets.AuthenticationFilterSet # TODO
+
+    search_fields = ["reference", "email"]
+    ordering_fields = ["reference", "created_at", "updated_at"]

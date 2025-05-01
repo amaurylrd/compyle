@@ -131,5 +131,4 @@ include = '\.pyi?$'
 line-length = 120
 
 [tool.codespell]
-ignore-words-list = ""
 skip = '*.po,poetry.lock,openapi.yml,CHANGELOG.md,**/fixtures/*,**/migrations/*,'

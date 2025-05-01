@@ -24,6 +24,50 @@
         "django": true,
         "justMyCode": true,
         "envFile": "${workspaceFolder}/.env"
+      },
+      {
+        "name": "Python: Celery Worker",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "celery",
+        "console": "integratedTerminal",
+        "args": [
+          "-A",
+          "compyle",
+          "worker",
+          "-l",
+          "info",
+          "--pool=solo"
+        ],
+        "justMyCode": true,
+        "envFile": "${workspaceFolder}/.env"
+      },
+      {
+        "name": "Python: Celery Beat",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "celery",
+        "console": "integratedTerminal",
+        "args": [
+          "-A",
+          "compyle",
+          "beat",
+          "-l",
+          "info"
+        ],
+        "justMyCode": true,
+        "envFile": "${workspaceFolder}/.env"
       }
     ],
+    "compounds": [
+      {
+        "name": "Python: Django Celery",
+        "configurations": [
+          "Python: Celery Beat",
+          "Python: Celery Worker",
+          "Python: Django Service"
+        ],
+        "stopAll": true
+      }
+    ]
   }

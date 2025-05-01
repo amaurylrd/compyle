@@ -13,11 +13,12 @@ DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 USE_X_FORWARDED_HOST = True
-APPEND_SLASH = False
+APPEND_SLASH = True
 
 # Application definition
 
 INSTALLED_APPS = [
+    "admin_action_tools",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -25,7 +26,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_standardized_errors",
     "django_filters",
+    "django_object_actions",
+    "widget_tweaks",
+    "django_json_widget",
     "corsheaders",
     "compyle.proxy",
 ]
@@ -85,7 +90,7 @@ BROKER_USER = quote(os.environ.get("CELERY_BROKER_USER", "compyle"))
 BROKER_PASSWORD = quote(os.environ.get("CELERY_BROKER_PASSWORD", "compyle"))
 BROKER_HOST = os.environ.get("CELERY_BROKER_HOST", "localhost")
 BROKER_PORT = os.environ.get("CELERY_BROKER_PORT", "5672")
-BROKER_VHOST = quote(os.environ.get("CELERY_BROKER_VHOST", "compyle"))
+BROKER_VHOST = quote(os.environ.get("CELERY_BROKER_VHOST", "/"))
 BROKER_PROTOCOL = os.environ.get("CELERY_BROKER_PROTOCOL", "amqp")
 
 CELERY_BROKER_URL = f"{BROKER_PROTOCOL}://{BROKER_USER}:{BROKER_PASSWORD}@{BROKER_HOST}:{BROKER_PORT}/{BROKER_VHOST}"
@@ -102,6 +107,7 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = int(os.getenv("CELERY_WORKER_MAX_TASKS_PER_C
 CELERY_TASK_RETRY_MAX = int(os.getenv("CELERY_TASK_RETRY_MAX", "3"))
 CELERY_TASK_RETRY_DELAY = int(os.getenv("CELERY_TASK_RETRY_DELAY", "60"))
 CELERY_TIMEZONE = "UTC"
+CELERY_ENABLE_UTC = True
 
 # Redis configuration
 # https://docs.celeryproject.org/en/stable/userguide/configuration.html#std:setting-REDIS_URL

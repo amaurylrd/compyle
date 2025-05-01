@@ -9,6 +9,8 @@ from django.utils.translation import pgettext_lazy
 class HttpMethod(TextChoices):
     """This enum represents the HTTP methods supported by the API."""
 
+    HEAD = "head", pgettext_lazy("http method", "HEAD")
+    GET = "get", pgettext_lazy("http method", "GET")
     POST = "post", pgettext_lazy("http method", "POST")
     PUT = "put", pgettext_lazy("http method", "PUT")
     PATCH = "path", pgettext_lazy("http method", "PATCH")
@@ -48,13 +50,21 @@ class HttpMethod(TextChoices):
         return self.func.__str__()
 
 
+class ResponseType(TextChoices):
+    """This enum represents the response types supported by the API."""
+
+    JSON = "json", pgettext_lazy("response type", "JSON")
+    XML = "xml", pgettext_lazy("response type", "XML")
+    RAW = "raw", pgettext_lazy("response type", "RAW")
+
+
 class AuthFlow(TextChoices):
     """This enum represents high-level authentication flow supported by a service."""
 
-    API_KEY = "api_key", pgettext_lazy("authentification type", "API key")
-    BASIC_AUTHENTICATION = "basic_authentication", pgettext_lazy("authentication type", "Basic authentication")
-    OAUTH2_AUTHORIZATION_CODE = "authorization code", pgettext_lazy("authentification type", "Authorization code")
-    OAUTH2_ClIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentification type", "Client credentials")
+    API_KEY = "api_key", pgettext_lazy("authentication flow", "API key")
+    BASIC_AUTHENTICATION = "basic_authentication", pgettext_lazy("authentication flow", "Basic authentication")
+    OAUTH2_AUTHORIZATION_CODE = "authorization code", pgettext_lazy("authentication flow", "Authorization code")
+    OAUTH2_ClIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentication flow", "Client credentials")
 
 
 class AuthMethod(TextChoices):

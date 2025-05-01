@@ -7,4 +7,4 @@ class ProxyConfig(AppConfig):
 
     name = "compyle.proxy"
     verbose_name = _("proxy")
-    verbose_name_plural = _("proxys")
+    verbose_name_plural = _("proxies")

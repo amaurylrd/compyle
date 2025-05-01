@@ -1,4 +1,3 @@
-from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import requests
@@ -83,8 +82,7 @@ def request_with_retry(
     backoff: float | None = 0.5,
     jitter: float | None = 0.5,
     timeout: float | None = None,
-    headers: dict[str, str] | None = None,
-    body: dict[str, Any] | None = None,
+    **request_params,
 ) -> requests.Response:
     with requests.Session() as session:
         strategery = Retry(
@@ -103,9 +101,9 @@ def request_with_retry(
         session.mount("https://", adapter)
 
         try:
-            response: requests.Response = method(url, headers=headers, data=body, timeout=timeout)
+            response: requests.Response = method(url, **request_params, timeout=timeout)
             response.raise_for_status()
-        except requests.exceptions.RequestException as error:
-            raise error
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
+            pass
 
         return response

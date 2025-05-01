@@ -9,7 +9,7 @@ _FAKER = Faker()
 SERVICE_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-service-{i}")
 ENDPOINT_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-endpoint-{i}")
 TRACE_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-trace-{i}")
-USER_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-user-{i}")
+AUTHENTICATION_REFERENCE_SEQUENCE = sequence(lambda i: f"auto-authentication-{i}")
 
 
 # pylint: disable=missing-function-docstring
@@ -56,8 +56,7 @@ def get_endpoint(
     base_url: str = DEFAULT,
     slug: str = DEFAULT,
     method: choices.HttpMethod = DEFAULT,
-    active: bool = DEFAULT,
-    json: bool = DEFAULT,
+    response_type: choices.ResponseType = DEFAULT,
     auth_method: choices.AuthMethod | None = DEFAULT,
     service: models.Service = DEFAULT,
 ) -> models.Endpoint:
@@ -77,10 +76,8 @@ def get_endpoint(
         slug = _FAKER.word()
     if method is DEFAULT:
         method = choices.HttpMethod.GET
-    if active is DEFAULT:
-        active = True
-    if json is DEFAULT:
-        json = True
+    if response_type is DEFAULT:
+        response_type = choices.ResponseType.JSON
     if auth_method is DEFAULT:
         auth_method = None
 
@@ -92,8 +89,7 @@ def get_endpoint(
         base_url=base_url,
         slug=slug,
         method=method,
-        active=active,
-        json=json,
+        response_type=response_type,
         auth_method=auth_method,
         service=service,
     )
@@ -104,7 +100,7 @@ def get_endpoint(
     return endpoint
 
 
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring, too-many-branches
 def get_trace(
     *,
     commit: bool = DEFAULT,
@@ -112,6 +108,9 @@ def get_trace(
     reference: str = DEFAULT,
     started_at: datetime = DEFAULT,
     completed_at: datetime = DEFAULT,
+    method: choices.HttpMethod = DEFAULT,
+    url: str = DEFAULT,
+    params: dict = DEFAULT,
     status_code: int = DEFAULT,
     headers: dict = DEFAULT,
     payload: dict = DEFAULT,
@@ -128,25 +127,36 @@ def get_trace(
     if reference is DEFAULT:
         reference = next(TRACE_REFERENCE_SEQUENCE)
 
-    # todo
     if started_at is DEFAULT:
-        pass
+        pass  # todo
     if completed_at is DEFAULT:
-        pass
+        completed_at = None
     if status_code is DEFAULT:
-        pass
+        status_code = 200
     if headers is DEFAULT:
         headers = {}
     if payload is DEFAULT:
         payload = None
+    if params is DEFAULT:
+        params = {}
 
     if endpoint is DEFAULT:
         endpoint = get_endpoint(commit=commit_related)
     if user is DEFAULT:
         user = get_authentication(commit=commit_related)
 
+    if method is DEFAULT:
+        method = endpoint.method
+    if url is DEFAULT:
+        url = endpoint.build_url(params)
+
     trace = models.Trace(
         reference=reference,
+        method=method,
+        url=url,
+        params=params,
+        started_at=started_at,  # TODO is est en auto_add_now
+        completed_at=completed_at,
         status_code=status_code,
         headers=headers,
         payload=payload,
@@ -170,7 +180,7 @@ def get_authentication(
         commit = True
 
     if reference is DEFAULT:
-        reference = next(USER_REFERENCE_SEQUENCE)
+        reference = next(AUTHENTICATION_REFERENCE_SEQUENCE)
 
     user = models.Authentication(
         reference=reference,

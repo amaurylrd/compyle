@@ -175,4 +175,8 @@ cython_debug/
 .pypirc
 
 static/
+!static/css/
 .dist/
+celery*.bak
+celery*.dat
+celery*.dir

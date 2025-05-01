@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from compyle.lib.validators import ReferenceValidator
 
 
-class CreateUpdateMixin:
+class CreateUpdateMixin(models.Model):
     """A mixin class that provides automatic tracking of creation and update timestamps."""
 
     created_at = models.DateTimeField(
@@ -19,6 +19,9 @@ class CreateUpdateMixin:
         help_text=_("The datetime of the last update."),
         auto_now=True,
     )
+
+    class Meta:
+        abstract = True
 
 
 class BaseModel(models.Model):

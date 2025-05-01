@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django_cryptography.fields import encrypt
 
 from compyle.lib.models import BaseModel, CreateUpdateMixin
-from compyle.proxy.choices import AuthFlow, AuthMethod, HttpMethod
+from compyle.proxy import choices
 from compyle.proxy.utils import build_url, normalize_url, request_with_retry
 
 
@@ -16,8 +16,8 @@ class Service(BaseModel, CreateUpdateMixin):
 
     name = models.CharField(
         verbose_name=_("name"),
-        help_text=_("The name of the service."),
-        max_length=50,
+        help_text=_("The name of the service, for a more human display."),
+        max_length=100,
     )
     trailing_slash = models.BooleanField(
         verbose_name=_("trailing slash"),
@@ -26,9 +26,9 @@ class Service(BaseModel, CreateUpdateMixin):
         blank=True,
     )
     auth_flow = models.CharField(
-        verbose_name=_("authenfication type"),
-        help_text=_("Tells how to authenticate against the service."),
-        choices=AuthFlow.choices,
+        verbose_name=_("authenfication flow"),
+        help_text=_("Tells how to authenticate against the service. If not set, no authentication will be used."),
+        choices=choices.AuthFlow.choices,
         default=None,
         null=True,
         blank=True,
@@ -55,10 +55,9 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         verbose_name=_("name"),
         help_text=_("The endpoint name, for a more human display."),
         max_length=100,
-        unique=True,
     )
     base_url = models.URLField(
-        verbose_name=_("url"),
+        verbose_name=_("URL"),
         help_text=_("The URL of the endpoint."),
     )
     slug = models.CharField(
@@ -69,31 +68,20 @@ class Endpoint(BaseModel, CreateUpdateMixin):
     method = models.CharField(
         verbose_name=_("method"),
         help_text=_("The HTTP method used to request the endpoint with."),
-        max_length=255,
-        choices=HttpMethod.choices,
+        max_length=10,
+        choices=choices.HttpMethod.choices,
     )
-    active = models.BooleanField(
-        verbose_name=_("active"),
-        help_text=_("Tells if the workflow is active."),
-        default=True,
-        blank=True,
-    )
-    json = models.BooleanField(
-        verbose_name=_("json"),
-        help_text=_("Indicates whether the endpoint is expected to return a JSON response."),
-        default=True,
-        blank=True,
-    )
-    xml = models.BooleanField(
-        verbose_name=_("xml"),
-        help_text=_("Indicates whether the endpoint is expected to return a XML response."),
-        default=False,
-        blank=True,
+    response_type = models.CharField(
+        verbose_name=_("response type"),
+        help_text=_("Indicates the expected response format."),
+        max_length=10,
+        choices=choices.ResponseType.choices,
+        default=choices.ResponseType.JSON,
     )
     auth_method = models.CharField(
         verbose_name=_("authenfication method"),
         help_text=_("The authification method to be used."),
-        choices=AuthMethod.choices,
+        choices=choices.AuthMethod.choices,
         default=None,
         null=True,
         blank=True,
@@ -116,6 +104,10 @@ class Endpoint(BaseModel, CreateUpdateMixin):
     def __str__(self) -> str:
         return self.name
 
+    # TODO build_header Accept: application/xml
+    # TODO build_header Content-Type: application/json
+    # TODO build_header Authorization
+
     def build_url(self, **params) -> str:
         """Builds the URL for the specified queryset.
 
@@ -126,7 +118,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         Returns:
             The normalized unparsed URL built with the specified query parameters.
         """
-        return normalize_url(build_url(self.base_url, self.slug, **params), self.service.trailling_slash)
+        return normalize_url(build_url(self.base_url, self.slug, **params), self.service.trailing_slash)
 
     def request(
         self,
@@ -145,7 +137,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         Returns:
             The response of the request.
         """
-        return request_with_retry(self.method, url, headers=headers, body=body)
+        return request_with_retry(choices.HttpMethod(self.method), url, headers=headers, data=body)
 
     def parse_response(self, response: requests.Response) -> Any:
         """Parse the response based on the expected content type.
@@ -156,9 +148,9 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         Returns:
             The parsed response content.
         """
-        if self.json:
+        if self.response_type == choices.ResponseType.JSON:
             return response.json()
-        if self.xml:
+        if self.response_type == choices.ResponseType.XML:
             return response.content
         return response.text
 
@@ -178,6 +170,19 @@ class Trace(BaseModel):
         null=True,
         blank=True,
     )
+    method = models.CharField(
+        verbose_name=_("method"),
+        help_text=_("The HTTP method used to request the endpoint with."),
+        max_length=10,
+        choices=choices.HttpMethod.choices,
+    )
+    url = models.URLField(
+        verbose_name=_("URL"),
+        help_text=_("The URL of the request."),
+        default=None,
+        null=True,
+        blank=True,
+    )
     status_code = models.IntegerField(
         verbose_name=_("status code"),
         help_text=_("The status code of the request response."),
@@ -187,14 +192,14 @@ class Trace(BaseModel):
     )
     headers = models.JSONField(
         verbose_name=_("headers"),
-        help_text=_("The headers associated with the HTTP request or response."),
+        help_text=_("The headers associated with the HTTP request."),
         default=dict,
         blank=True,
         null=True,
     )
     payload = models.JSONField(
         verbose_name=_("payload"),
-        help_text=_("The body of the request or response JSON-formatted."),
+        help_text=_("The body of the request JSON-formatted."),
         default=None,
         blank=True,
         null=True,
@@ -220,6 +225,8 @@ class Trace(BaseModel):
         to="Authentication",
         related_name="auth_traces",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -296,7 +303,7 @@ class Authentication(BaseModel, CreateUpdateMixin):
     # todo add encrypt ?
     access_token = models.CharField(
         verbose_name=_("access token"),
-        help_text=_("The access token to be used for authentification."),
+        help_text=_("The access token to be used for authentication."),
         max_length=512,
         default=None,
         null=True,

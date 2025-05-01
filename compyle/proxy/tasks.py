@@ -11,7 +11,7 @@ from requests_oauthlib import OAuth2Session
 def async_request(
     self,
     endpoint_id: str,
-    authentication_id: str,
+    authentication_id: str | None,
     params: dict[str, str],
     headers: dict[str, str],
     body: dict[str, Any],
@@ -27,6 +27,7 @@ def async_request(
 
         if endpoint.service.auth_flow == AuthFlow.API_KEY:
             headers["Authorization"] = f"Bearer {authentication.api_key}"
+            # x-api-key header ?
 
         elif endpoint.service.auth_flow == AuthFlow.OAUTH2_ClIENT_CREDENTIALS:
             oauth = OAuth2Session(client_id=authentication.client_id)
@@ -57,9 +58,17 @@ def async_request(
         elif endpoint.service.auth_flow == AuthFlow.BASIC_AUTHENTICATION:
             pass
 
-    url = endpoint.build_url(params)
+    url = endpoint.build_url(**params)
 
-    trace = Trace(endpoint=endpoint, authentication=authentication, headers=headers, payload=body, params=params)
+    trace = Trace(
+        endpoint=endpoint,
+        authentication=authentication,
+        method=endpoint.method,
+        url=url,
+        headers=headers,
+        payload=body,
+        params=params,
+    )
     trace.save()
 
     response = endpoint.request(url, headers=headers, body=body)
