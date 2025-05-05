@@ -15,11 +15,6 @@ class ServiceFilterSet(CreateUpdateFilterSet):
         help_text=_("Filter by references. Multiple values allowed separated by comma."),
         field_name="reference",
     )
-    endpoints = CharInFilter(
-        label=_("endpoint references"),
-        help_text=_("Filter by endpoint references. Multiple values allowed separated by comma."),
-        field_name="endpoint__reference",
-    )
 
 
 class EndpointFilterSet(CreateUpdateFilterSet):
@@ -29,11 +24,6 @@ class EndpointFilterSet(CreateUpdateFilterSet):
         label=_("references"),
         help_text=_("Filter by references. Multiple values allowed separated by comma."),
         field_name="reference",
-    )
-    traces = CharInFilter(
-        label=_("traces"),
-        help_text=_("Filter by trace reference. Multiple values allowed separated by comma."),
-        field_name="endpoint_traces__endpoint",
     )
 
 
@@ -66,7 +56,7 @@ class TraceFilterSet(FilterSet):
         method="filter_status_prefix",
     )
 
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument, no-self-use
     def filter_status_prefix(self, queryset: QuerySet[models.Trace], name: str, value: str) -> QuerySet[models.Trace]:
         """Filters the queryset to include only traces whose status code starts with the given prefix.
 
@@ -93,6 +83,6 @@ class AuthenticationFilterSet(CreateUpdateFilterSet):
         label=_("has access token"),
         field_name="access_token",
         lookup_expr="isnull",
-        help_text=_("True if access token is null, otherwize False."),
+        help_text=_("True if access token is null, otherwise False."),
         exclude=True,
     )

@@ -1,3 +1,5 @@
+from django.db.models import Prefetch
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
@@ -14,13 +16,30 @@ class ServiceViewSet(BaseModelViewSet):
 
     queryset = models.Service.objects.all().prefetch_related("endpoints")
     serializer_class = serializers.ServiceSerializer
-    serializer_classes = {}
 
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_class = filtersets.ServiceFilterSet
 
-    search_fields = ["reference", "name", "endpoints__reference"]
+    search_fields = ["reference", "name"]
     ordering_fields = ["reference", "created_at", "updated_at"]
+
+    def get_queryset(self) -> QuerySet[models.Service]:
+        """Returns the queryset of `Service` objects with prefetch optimization for GET requests.
+
+        Returns:
+            The queryset of `Service` objects.
+        """
+        queryset = super().get_queryset()
+
+        if self.request.method == "GET":
+            queryset.prefetch_related(
+                Prefetch(
+                    "endpoints__endpoint_traces",
+                    queryset=models.Trace.objects.only("pk", "endpoint"),
+                )
+            )
+
+        return queryset
 
 
 class EndpointViewSet(BaseModelViewSet):
@@ -67,6 +86,7 @@ class EndpointViewSet(BaseModelViewSet):
             serializer.validated_data.get("params"),
             serializer.validated_data.get("headers"),
             serializer.validated_data.get("body"),
+            timeout=serializer.validated_data.get("timeout"),
         )
 
         response_data = serializer.validated_data

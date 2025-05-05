@@ -42,7 +42,7 @@ class Service(BaseModel, CreateUpdateMixin):
         null=True,
         blank=True,
     )
-    # todo faire un validtors token_url
+    # todo faire un validators token_url
 
     # todo refresh_token_url
     # todo auth_config
@@ -339,6 +339,9 @@ class Authentication(BaseModel, CreateUpdateMixin):
     class Meta:
         verbose_name = _("authentication")
         verbose_name_plural = _("authentications")
+
+    def __str__(self) -> str:
+        return self.email
 
     @property
     @admin.display(description=_("is token valid"), boolean=True)

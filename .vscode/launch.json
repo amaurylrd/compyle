@@ -19,6 +19,8 @@
         "program": "${workspaceFolder}/manage.py",
         "args": [
           "test",
+          "-v2",
+          "--parallel",
           "--no-input"
         ],
         "django": true,

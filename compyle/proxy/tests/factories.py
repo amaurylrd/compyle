@@ -20,6 +20,7 @@ def get_service(
     name: str = DEFAULT,
     trailing_slash: bool = DEFAULT,
     auth_flow: choices.AuthFlow | None = DEFAULT,
+    token_url: str | None = DEFAULT,
 ) -> models.Service:
     if commit is DEFAULT:
         commit = True
@@ -33,12 +34,15 @@ def get_service(
         trailing_slash = True
     if auth_flow is DEFAULT:
         auth_flow = None
+    if token_url is DEFAULT:
+        token_url = None
 
     service = models.Service(
         reference=reference,
         name=name,
         trailing_slash=trailing_slash,
         auth_flow=auth_flow,
+        token_url=token_url,
     )
 
     if commit:

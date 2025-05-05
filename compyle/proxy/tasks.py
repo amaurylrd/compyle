@@ -1,7 +1,6 @@
 from typing import Any
 
 from celery import shared_task
-from django.utils import timezone
 from requests_oauthlib import OAuth2Session
 
 

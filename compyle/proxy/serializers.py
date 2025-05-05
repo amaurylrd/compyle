@@ -7,8 +7,12 @@ from compyle.proxy import models
 
 
 class EndpointSerializer(serializers.ModelSerializer[models.Endpoint]):
-    """Serializer for :class:`comprle.proxy.models.Endpoint`."""
+    """Serializer for :class:`compyle.proxy.models.Endpoint`."""
 
+    service = serializers.PrimaryKeyRelatedField(
+        queryset=models.Service.objects.all(),
+        required=False,
+    )
     traces = serializers.PrimaryKeyRelatedField(
         source="endpoint_traces",
         many=True,
@@ -36,11 +40,19 @@ class EndpointSerializer(serializers.ModelSerializer[models.Endpoint]):
             "updated_at",
         ]
 
+    # def __init__(self, *args, **kwargs) -> None:
+    #     # TODO
+    #     super().__init__(*args, **kwargs)
+    #     print("test")
+    #     print("nested", self.context, self.context.get("nested"))
+    #     if not self.context.get("nested"):
+    #         self.fields["service"].required = True
+
 
 class ServiceSerializer(serializers.ModelSerializer[models.Service]):
-    """Serializer for :class:`comprle.proxy.models.Service`."""
+    """Serializer for :class:`compyle.proxy.models.Service`."""
 
-    endpoints = EndpointSerializer(many=True)
+    endpoints = EndpointSerializer(many=True, required=False)
 
     class Meta:
         model = models.Service
@@ -49,6 +61,7 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
             "name",
             "trailing_slash",
             "auth_flow",
+            "token_url",
             "endpoints",
             "created_at",
             "updated_at",
@@ -58,6 +71,22 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
             "created_at",
             "updated_at",
         ]
+
+    # def get_fields(self):
+    #     fields = super().get_fields()
+    #     fields["endpoints"].child.context.update(self.context)
+    #     fields["endpoints"].child.context["nested"] = True
+    #     print("get_fields")
+    #     return fields
+    # def to_internal_value(self, data):
+    #     print("to_internal_value")
+    #     # Inject context into nested endpoints manually
+    #     endpoints_data = data.get("endpoints", [])
+    #     if endpoints_data:
+    #         # Make sure the child serializer sees 'nested' context
+    #         self.fields["endpoints"].child.context.update(self.context)
+    #         self.fields["endpoints"].child.context["nested"] = True
+    #     return super().to_internal_value(data)
 
     @transaction.atomic
     def create(self, validated_data: dict[str, Any]) -> models.Service:
@@ -72,7 +101,7 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
         endpoints_data = validated_data.pop("endpoints", [])
         service = models.Service.objects.create(**validated_data)
 
-        if endpoints_data:
+        if "endpoints" in self.initial_data and endpoints_data:
             endpoints = [models.Endpoint(service=service, **endpoint_data) for endpoint_data in endpoints_data]
             models.Endpoint.objects.bulk_create(endpoints)
 
@@ -90,7 +119,6 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
             The updated service instance.
         """
         endpoints_data = validated_data.pop("endpoints", [])
-
         instance = super().update(instance, validated_data)
         service_endpoints = instance.endpoints.all()
 
@@ -141,11 +169,12 @@ class RequestSerializer(serializers.Serializer):
     params = serializers.DictField(required=False, allow_null=True, allow_empty=True, default={})
     headers = serializers.DictField(required=False, allow_null=True, allow_empty=True, default={})
     body = serializers.DictField(required=False, allow_null=True, default=None)
+    timeout = serializers.FloatField(required=False, allow_null=True, default=None)
     task_id = serializers.CharField(read_only=True)
 
 
 class TraceSerializer(serializers.ModelSerializer[models.Trace]):
-    """Serializer for :class:`event_broker.traceability.models.Trace`."""
+    """Serializer for :class:`compyle.proxy.models.Trace`."""
 
     status_type = serializers.SerializerMethodField()
 
@@ -167,6 +196,7 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         ]
         read_only_fields = fields
 
+    # pylint: disable=no-self-use
     def get_status_type(self, obj: models.Trace) -> str:
         """Get the status type of the trace based on its status code.
 
@@ -190,6 +220,8 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
 
 
 class AuthenticationSerializer(serializers.ModelSerializer[models.Authentication]):
+    """Serializer for :class:`compyle.proxy.models.Authentication`."""
+
     class Meta:
         model = models.Authentication
         fields = [
@@ -205,3 +237,6 @@ class AuthenticationSerializer(serializers.ModelSerializer[models.Authentication
             "refresh_token",
         ]
         read_only_fields = fields
+
+
+# TODO if serializers.current_user(self.context).is_staff else None

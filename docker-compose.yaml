@@ -17,6 +17,8 @@ services:
       ALLOW_EMPTY_PASSWORD: yes
     ports:
       - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
 
   rabbitmq:
     image: bitnami/rabbitmq:3.11.8
@@ -28,7 +30,7 @@ services:
       - "15672:15672"
       - "5672:5672"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
