@@ -120,40 +120,41 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
         """
         endpoints_data = validated_data.pop("endpoints", [])
         instance = super().update(instance, validated_data)
-        service_endpoints = instance.endpoints.all()
 
-        if not endpoints_data:
-            service_endpoints.delete()
-        else:
-            service_endpoints_ids = {e.reference: e for e in service_endpoints}
+        if "endpoints" in self.initial_data:
+            service_endpoints = instance.endpoints.all()
 
-            update_endpoints = []
-            create_endpoints = []
+            if not endpoints_data:
+                service_endpoints.delete()
+            else:
+                service_endpoints_ids: dict[str, models.Endpoint] = {e.reference: e for e in service_endpoints}
 
-            for endpoint_data in endpoints_data:
-                reference = endpoint_data.get("reference")
+                update_endpoints: list[models.Endpoint] = []
+                create_endpoints: list[models.Endpoint] = []
 
-                if reference in service_endpoints:
-                    endpoint = service_endpoints_ids.pop(reference)
+                for endpoint_data in endpoints_data:
+                    reference = endpoint_data.get("reference")
 
-                    endpoint_serializer = EndpointSerializer(instance=endpoint, data=endpoint_data, partial=True)
-                    endpoint_serializer.is_valid(raise_exception=True)
-                    endpoint = endpoint_serializer.save()
+                    if reference in service_endpoints:
+                        endpoint = service_endpoints_ids.pop(reference)
 
-                    update_endpoints.append(endpoint)
-                else:
-                    endpoint = models.Endpoint(service=instance, **endpoint_data)
+                        for key, value in endpoint_data.items():
+                            setattr(endpoint, key, value)
 
-                    create_endpoints.append(endpoint)
+                        update_endpoints.append(endpoint)
+                    else:
+                        endpoint = models.Endpoint(service=instance, **endpoint_data)
 
-            if update_endpoints:
-                models.Endpoint.objects.bulk_update(update_endpoints, self.fields["endpoints"].child.Meta.fields)
+                        create_endpoints.append(endpoint)
 
-            if create_endpoints:
-                models.Endpoint.objects.bulk_create(create_endpoints)
+                if update_endpoints:
+                    models.Endpoint.objects.bulk_update(update_endpoints, self.fields["endpoints"].child.Meta.fields)
 
-            if service_endpoints_ids:
-                models.Endpoint.objects.filter(reference__in=service_endpoints_ids).delete()
+                if create_endpoints:
+                    models.Endpoint.objects.bulk_create(create_endpoints)
+
+                if service_endpoints_ids:
+                    models.Endpoint.objects.filter(reference__in=service_endpoints_ids).delete()
 
         return instance
 

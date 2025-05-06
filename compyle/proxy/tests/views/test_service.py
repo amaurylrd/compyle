@@ -8,7 +8,7 @@ from rest_framework.test import force_authenticate
 
 from compyle.lib.test import BaseApiTest
 from compyle.proxy.models import Endpoint, Service
-from compyle.proxy.tests.factories import get_service
+from compyle.proxy.tests.factories import get_endpoint, get_service
 from compyle.proxy.views import ServiceViewSet
 
 list_url = reverse("proxy:services-list")
@@ -263,7 +263,7 @@ class ServiceTestCase(BaseApiTest):
         self.assertIsNone(response.data["auth_flow"])
         self.assertIsNone(response.data["token_url"])
 
-    def test_can_create_service_with_endpoints(self) -> None:
+    def test_can_create_service_with_endpoint(self) -> None:
         payload = {
             "name": "SERVICE_NAME_001",
             "endpoints": [
@@ -292,5 +292,199 @@ class ServiceTestCase(BaseApiTest):
         self.assertEqual(response.data["name"], payload["name"])
         self.assertEqual(response.data["endpoints"][0]["reference"], endpoint.reference)
         self.assertEqual(response.data["endpoints"][0]["name"], payload["endpoints"][0]["name"])
+        self.assertEqual(response.data["endpoints"][0]["base_url"], payload["endpoints"][0]["base_url"])
         self.assertEqual(response.data["endpoints"][0]["slug"], payload["endpoints"][0]["slug"])
         self.assertEqual(response.data["endpoints"][0]["method"], payload["endpoints"][0]["method"])
+
+    def test_can_create_service_with_endpoints(self) -> None:
+        payload = {
+            "name": "SERVICE_NAME_001",
+            "endpoints": [
+                {
+                    "name": "ENDPOINT_NAME_001",
+                    "base_url": "https://api.twitch.tv/helix",
+                    "slug": "/games",
+                    "method": "get",
+                },
+                {
+                    "name": "ENDPOINT_NAME_002",
+                    "base_url": "https://api.twitch.tv/helix",
+                    "slug": "/clips",
+                    "method": "get",
+                },
+            ],
+        }
+
+        with self.assertNumQueries(7):
+            request = self.factory.post(list_url, payload, format="json")
+            force_authenticate(request, user=self.user)
+            response = list_view(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(Service.objects.count(), 1)
+        self.assertEqual(Endpoint.objects.count(), 2)
+
+        service, endpoints = Service.objects.first(), Endpoint.objects.all()
+        self.assertTrue(all(service.reference == endpoint.service.reference for endpoint in endpoints))
+
+        self.assertEqual(response.data["reference"], service.reference)
+        self.assertEqual(response.data["name"], payload["name"])
+        self.assertCountEqual(
+            [endpoint["reference"] for endpoint in response.data["endpoints"]],
+            [endpoint.reference for endpoint in endpoints],
+        )
+
+    def test_cannot_create_service_as_anonymous_user(self) -> None:
+        payload = {
+            "name": "SERVICE_NAME_001",
+        }
+
+        with self.assertNumQueries(0):
+            request = self.factory.post(list_url, payload, format="json")
+            force_authenticate(request, user=self.anonymus_user)
+            response = list_view(request)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_can_partial_update_service(self) -> None:
+        service = get_service()
+        payload = {
+            "name": "SERVICE_NAME_001",
+        }
+
+        with self.assertNumQueries(6):
+            request = self.factory.patch(detail_url, payload, format="json")
+            force_authenticate(request, user=self.user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data["reference"], service.reference)
+        self.assertEqual(response.data["name"], payload["name"])
+        self.assertEqual(response.data["trailing_slash"], service.trailing_slash)
+        self.assertEqual(response.data["auth_flow"], service.auth_flow)
+        self.assertEqual(response.data["token_url"], service.token_url)
+        self.assertEqual(response.data["endpoints"], [])
+
+    def test_can_partial_update_service_create_endpoint(self) -> None:
+        service = get_service()
+        payload = {
+            "name": "SERVICE_NAME_001",
+            "endpoints": [
+                {
+                    "name": "ENDPOINT_NAME_001",
+                    "base_url": "https://api.twitch.tv/helix",
+                    "slug": "/games",
+                    "method": "get",
+                }
+            ],
+        }
+
+        with self.assertNumQueries(6):
+            request = self.factory.patch(detail_url, payload, format="json")
+            force_authenticate(request, user=self.user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(Service.objects.count(), 1)
+        self.assertEqual(Endpoint.objects.count(), 1)
+
+        service, endpoint = Service.objects.first(), Endpoint.objects.first()
+        self.assertEqual(service.reference, endpoint.service.reference)
+
+        self.assertEqual(response.data["reference"], service.reference)
+        self.assertEqual(response.data["name"], payload["name"])
+        self.assertEqual(response.data["endpoints"][0]["reference"], endpoint.reference)
+
+    def test_can_partial_update_service_update_endpoint(self) -> None:
+        service = get_service()
+        endpoint = get_endpoint(service=service)
+        payload = {
+            "name": "SERVICE_NAME_001",
+            "endpoints": [
+                {
+                    "name": "ENDPOINT_NAME_001",
+                    "base_url": "https://api.twitch.tv/helix",
+                    "slug": "/games",
+                    "method": "get",
+                }
+            ],
+        }
+
+        with self.assertNumQueries(6):
+            request = self.factory.patch(detail_url, payload, format="json")
+            force_authenticate(request, user=self.user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(Service.objects.count(), 1)
+        self.assertEqual(Endpoint.objects.count(), 1)
+
+        service, endpoint = Service.objects.first(), Endpoint.objects.first()
+        self.assertEqual(service.reference, endpoint.service.reference)
+
+        self.assertEqual(response.data["reference"], service.reference)
+        self.assertEqual(response.data["name"], payload["name"])
+        self.assertEqual(response.data["endpoints"][0]["reference"], endpoint.reference)
+        self.assertEqual(response.data["endpoints"][0]["name"], payload["endpoints"][0]["name"])
+        self.assertEqual(response.data["endpoints"][0]["base_url"], payload["endpoints"][0]["base_url"])
+        self.assertEqual(response.data["endpoints"][0]["slug"], payload["endpoints"][0]["slug"])
+        self.assertEqual(response.data["endpoints"][0]["method"], payload["endpoints"][0]["method"])
+
+    def test_can_partial_update_service_delete_endpoint(self) -> None:
+        service = get_service()
+        _ = get_endpoint(service=service)
+        payload = {"name": "SERVICE_NAME_001", "endpoints": []}
+
+        with self.assertNumQueries(9):
+            request = self.factory.patch(detail_url, payload, format="json")
+            force_authenticate(request, user=self.user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(Service.objects.count(), 1)
+        self.assertEqual(Endpoint.objects.count(), 0)
+
+        service = Service.objects.first()
+
+        self.assertEqual(service.name == payload["name"])
+
+        self.assertEqual(response.data["reference"], service.reference)
+        self.assertEqual(response.data["name"], payload["name"])
+        self.assertEqual(response.data["endpoints"], [])
+
+    def test_cannot_partial_update_service_as_anonymous_user(self) -> None:
+        service = get_service()
+        payload = {
+            "name": "SERVICE_NAME_001",
+        }
+
+        with self.assertNumQueries(0):
+            request = self.factory.patch(detail_url, payload, format="json")
+            force_authenticate(request, user=self.anonymus_user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_cannot_update_service_as_anonymous_user(self) -> None:
+        service = get_service()
+        payload = {
+            "name": "SERVICE_NAME_001",
+        }
+        # TODO fix payload for put
+
+        with self.assertNumQueries(0):
+            request = self.factory.put(detail_url, payload, format="json")
+            force_authenticate(request, user=self.anonymus_user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_cannot_delete_service_as_anonymous_user(self) -> None:
+        service = get_service()
+
+        with self.assertNumQueries(0):
+            request = self.factory.delete(detail_url)
+            force_authenticate(request, user=self.anonymus_user)
+            response = detail_view(request, pk=service.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
