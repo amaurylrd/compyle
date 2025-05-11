@@ -67,7 +67,6 @@ def async_request(
         url=url,
         headers=headers,
         payload=body,
-        params=params,
     )
     trace.save()
 

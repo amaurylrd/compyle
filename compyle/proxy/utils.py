@@ -31,13 +31,17 @@ def add_url_params(url: str, **params) -> str:
         The url with the parameters added.
     """
     parts = urlparse(url)
-    query = dict(parse_qsl(parts.query, keep_blank_values=True)).update(params)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.update(params)
 
     return urlunparse(parts._replace(query=urlencode(query)))
 
 
 def build_url(url: str, slug: str, **params) -> str:
     """Builds the URL for the specified queryset.
+
+    Fragments (the part after `#`) should not be used in API requests.
+    They are client-side only and are not included in the actual HTTP request sent to the server.
 
     Args:
         url: The base URL.
@@ -47,7 +51,7 @@ def build_url(url: str, slug: str, **params) -> str:
     Returns:
         The unparsed URL built with the normalized query parameters.
     """
-    components = list(urlparse(url, allow_fragments=False))
+    components = list(urlparse(url))
     components[2] += slug
     components[4] = urlencode(params)
 
@@ -64,17 +68,18 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
     Returns:
         The normalized URL with or without a trailing slash.
     """
-    # adds a trailing slash if the option is specified and the url does not already end with a slash
-    if trailling_slash and url[-1] != "/":
-        return url + "/"
+    parsed = urlparse(url)
+    path = parsed.path
 
-    # removes the trailing slash if the option is not specified and the url ends with a slash
-    if not trailling_slash and url[-1] == "/":
-        return url[:-1]
+    if trailling_slash and not path.endswith("/"):
+        path += "/"
+    if not trailling_slash and path.endswith("/"):
+        path = path.rstrip("/")
 
-    return url
+    return urlunparse(parsed._replace(path=path))
 
 
+# pylint: disable=too-many-arguments
 def request_with_retry(
     method: HttpMethod,
     url: str,
@@ -85,7 +90,9 @@ def request_with_retry(
     **request_params,
 ) -> requests.Response:
     with requests.Session() as session:
+        # pylint: disable=unexpected-keyword-arg
         strategery = Retry(
+            respect_retry_after_header=False,
             total=retries,
             backoff_factor=backoff,
             backoff_jitter=jitter,

@@ -206,7 +206,6 @@ class TraceAdmin(ModelAdmin, ReadOnlyAdminMixin):
                     "started_at",
                     "completed_at",
                     "status_code",
-                    "params",
                     "headers",
                     "payload",
                 )

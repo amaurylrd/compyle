@@ -11,7 +11,6 @@ class EndpointSerializer(serializers.ModelSerializer[models.Endpoint]):
 
     service = serializers.PrimaryKeyRelatedField(
         queryset=models.Service.objects.all(),
-        required=False,
     )
     traces = serializers.PrimaryKeyRelatedField(
         source="endpoint_traces",
@@ -40,19 +39,17 @@ class EndpointSerializer(serializers.ModelSerializer[models.Endpoint]):
             "updated_at",
         ]
 
-    # def __init__(self, *args, **kwargs) -> None:
-    #     # TODO
-    #     super().__init__(*args, **kwargs)
-    #     print("test")
-    #     print("nested", self.context, self.context.get("nested"))
-    #     if not self.context.get("nested"):
-    #         self.fields["service"].required = True
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        if self.context.get("nested", False):
+            self.fields["service"].required = False
 
 
 class ServiceSerializer(serializers.ModelSerializer[models.Service]):
-    """Serializer for :class:`compyle.proxy.models.Service`."""
+    """Default serializer for :class:`compyle.proxy.models.Service`."""
 
-    endpoints = EndpointSerializer(many=True, required=False)
+    endpoints = EndpointSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Service
@@ -72,21 +69,16 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
             "updated_at",
         ]
 
-    # def get_fields(self):
-    #     fields = super().get_fields()
-    #     fields["endpoints"].child.context.update(self.context)
-    #     fields["endpoints"].child.context["nested"] = True
-    #     print("get_fields")
-    #     return fields
-    # def to_internal_value(self, data):
-    #     print("to_internal_value")
-    #     # Inject context into nested endpoints manually
-    #     endpoints_data = data.get("endpoints", [])
-    #     if endpoints_data:
-    #         # Make sure the child serializer sees 'nested' context
-    #         self.fields["endpoints"].child.context.update(self.context)
-    #         self.fields["endpoints"].child.context["nested"] = True
-    #     return super().to_internal_value(data)
+
+class ServiceCreateSerializer(ServiceSerializer):
+    """Serializer for :class:`compyle.proxy.models.Service` for create action."""
+
+    endpoints = EndpointSerializer(many=True, required=False, context={"nested": True})
+
+    class Meta:
+        model = ServiceSerializer.Meta.model
+        fields = ServiceSerializer.Meta.fields
+        read_only_fields = ServiceSerializer.Meta.read_only_fields
 
     @transaction.atomic
     def create(self, validated_data: dict[str, Any]) -> models.Service:
@@ -106,57 +98,6 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
             models.Endpoint.objects.bulk_create(endpoints)
 
         return service
-
-    @transaction.atomic
-    def update(self, instance: models.Service, validated_data: dict[str, Any]) -> models.Service:
-        """Update an existing service and its endpoints.
-
-        Args:
-            instance: The service instance to update.
-            validated_data: The validated data for the service.
-
-        Returns:
-            The updated service instance.
-        """
-        endpoints_data = validated_data.pop("endpoints", [])
-        instance = super().update(instance, validated_data)
-
-        if "endpoints" in self.initial_data:
-            service_endpoints = instance.endpoints.all()
-
-            if not endpoints_data:
-                service_endpoints.delete()
-            else:
-                service_endpoints_ids: dict[str, models.Endpoint] = {e.reference: e for e in service_endpoints}
-
-                update_endpoints: list[models.Endpoint] = []
-                create_endpoints: list[models.Endpoint] = []
-
-                for endpoint_data in endpoints_data:
-                    reference = endpoint_data.get("reference")
-
-                    if reference in service_endpoints:
-                        endpoint = service_endpoints_ids.pop(reference)
-
-                        for key, value in endpoint_data.items():
-                            setattr(endpoint, key, value)
-
-                        update_endpoints.append(endpoint)
-                    else:
-                        endpoint = models.Endpoint(service=instance, **endpoint_data)
-
-                        create_endpoints.append(endpoint)
-
-                if update_endpoints:
-                    models.Endpoint.objects.bulk_update(update_endpoints, self.fields["endpoints"].child.Meta.fields)
-
-                if create_endpoints:
-                    models.Endpoint.objects.bulk_create(create_endpoints)
-
-                if service_endpoints_ids:
-                    models.Endpoint.objects.filter(reference__in=service_endpoints_ids).delete()
-
-        return instance
 
 
 class RequestSerializer(serializers.Serializer):
@@ -191,7 +132,6 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
             "status_type",
             "headers",
             "payload",
-            "params",
             "endpoint",
             "authentication",
         ]
@@ -207,16 +147,17 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         Returns:
             The status type of the trace or None if not applicable.
         """
-        if status.is_informational(obj.status_code):
-            return "INFORMATIONAL"
-        if status.is_success(obj.status_code):
-            return "SUCCESS"
-        if status.is_redirect(obj.status_code):
-            return "REDIRECT"
-        if status.is_client_error(obj.status_code):
-            return "CLIENT_ERROR"
-        if status.is_server_error(obj.status_code):
-            return "SERVER_ERROR"
+        if obj.status_code:
+            if status.is_informational(obj.status_code):
+                return "INFORMATIONAL"
+            if status.is_success(obj.status_code):
+                return "SUCCESS"
+            if status.is_redirect(obj.status_code):
+                return "REDIRECT"
+            if status.is_client_error(obj.status_code):
+                return "CLIENT_ERROR"
+            if status.is_server_error(obj.status_code):
+                return "SERVER_ERROR"
         return None
 
 
@@ -238,6 +179,3 @@ class AuthenticationSerializer(serializers.ModelSerializer[models.Authentication
             "refresh_token",
         ]
         read_only_fields = fields
-
-
-# TODO if serializers.current_user(self.context).is_staff else None

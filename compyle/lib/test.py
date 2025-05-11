@@ -16,9 +16,9 @@ class BaseTestCase(TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self) -> None:
-        """Set up the test environment with user and anonymus_user before each test."""
+        """Set up the test environment with user and anonymous_user before each test."""
         self.user = self.create_superuser()
-        self.anonymus_user = AnonymousUser()
+        self.anonymous_user = AnonymousUser()
 
     # pylint: disable=no-self-use
     def create_superuser(self) -> User:  # type: ignore

@@ -9,11 +9,10 @@ from django.utils.translation import pgettext_lazy
 class HttpMethod(TextChoices):
     """This enum represents the HTTP methods supported by the API."""
 
-    HEAD = "head", pgettext_lazy("http method", "HEAD")
     GET = "get", pgettext_lazy("http method", "GET")
     POST = "post", pgettext_lazy("http method", "POST")
     PUT = "put", pgettext_lazy("http method", "PUT")
-    PATCH = "path", pgettext_lazy("http method", "PATCH")
+    PATCH = "patch", pgettext_lazy("http method", "PATCH")
     DELETE = "delete", pgettext_lazy("http method", "DELETE")
 
     @property

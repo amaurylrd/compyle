@@ -46,7 +46,7 @@ celery = "^5.4"
 redis = "^5.0.8"
 cachetools = "^5.5.0"
 
-drf-spectacular = "^0.28.0"
+drf-spectacular = {extras = ["sidecar"], version = "^0.28.0"}
 drf-standardized-errors = { extras = ["openapi"], version = "^0.14.1" }
 
 requests = "^2.25.1"

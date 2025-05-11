@@ -2,6 +2,9 @@ import os
 import sys
 from urllib.parse import quote
 
+from compyle import __version__
+
+RENDERER_MEDIA_NAME = "compyle"
 SETTINGS_DIR = os.path.dirname(__file__)
 BASE_DIR = os.path.dirname(SETTINGS_DIR)
 
@@ -26,6 +29,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     "drf_standardized_errors",
     "django_filters",
     "django_object_actions",
@@ -65,6 +70,7 @@ TEMPLATES = [
 ]
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
@@ -77,6 +83,17 @@ REST_FRAMEWORK = {
     ],
     "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
     "PAGE_SIZE": 20,
+}
+
+# DRF Spectacular settings
+# https://drf-spectacular.readthedocs.io/en/latest/settings.html
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": RENDERER_MEDIA_NAME,
+    "VERSION": __version__,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "COMPONENT_SPLIT_PATCH": True,
+    "POSTPROCESSING_HOOKS": ["drf_standardized_errors.openapi_hooks.postprocess_schema_enums"],
 }
 
 DRF_STANDARDIZED_ERRORS = {
@@ -256,7 +273,5 @@ CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-RENDERER_MEDIA_NAME = "compyle"
 
 globals().update(locals())

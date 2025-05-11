@@ -123,7 +123,6 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         Args:
             **params: The parameters of the query.
 
-
         Returns:
             The normalized unparsed URL built with the specified query parameters.
         """
@@ -140,7 +139,6 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         Args:
             url: The URL to be used for the request.
             headers: The headers to be used for the request. Defaults to None.
-            params: The parameters to be used for the request. Defaults to None.
             body: The body to be used for the request. Defaults to None.
 
         Returns:
@@ -209,13 +207,6 @@ class Trace(BaseModel):
     payload = models.JSONField(
         verbose_name=_("payload"),
         help_text=_("The body of the request JSON-formatted."),
-        default=None,
-        blank=True,
-        null=True,
-    )
-    params = models.JSONField(
-        verbose_name=_("parameters"),
-        help_text=_("The parameters sent in the request."),
         default=None,
         blank=True,
         null=True,

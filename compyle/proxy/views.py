@@ -16,12 +16,15 @@ class ServiceViewSet(BaseModelViewSet):
 
     queryset = models.Service.objects.all().prefetch_related("endpoints")
     serializer_class = serializers.ServiceSerializer
+    serializer_classes = {
+        "create": serializers.ServiceCreateSerializer,
+    }
 
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_class = filtersets.ServiceFilterSet
 
     search_fields = ["reference", "name"]
-    ordering_fields = ["reference", "created_at", "updated_at"]
+    ordering_fields = ["reference", "name", "created_at", "updated_at"]
 
     def get_queryset(self) -> QuerySet[models.Service]:
         """Returns the queryset of `Service` objects with prefetch optimization for GET requests.
@@ -35,7 +38,7 @@ class ServiceViewSet(BaseModelViewSet):
             queryset.prefetch_related(
                 Prefetch(
                     "endpoints__endpoint_traces",
-                    queryset=models.Trace.objects.only("pk", "endpoint"),
+                    queryset=models.Trace.objects.only("pk"),
                 )
             )
 
@@ -48,7 +51,7 @@ class EndpointViewSet(BaseModelViewSet):
     queryset = models.Endpoint.objects.all().select_related("service").prefetch_related("endpoint_traces")
     serializer_class = serializers.EndpointSerializer
     serializer_classes = {
-        "request": serializers.RequestSerializer,
+        "trigger_request": serializers.RequestSerializer,
     }
 
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
@@ -65,7 +68,7 @@ class EndpointViewSet(BaseModelViewSet):
             status.HTTP_202_ACCEPTED: serializers.RequestSerializer,
         },
     )
-    @action(detail=True, methods=["post"], url_path="request")
+    @action(detail=True, methods=["post"], url_path="request", url_name="request")
     def trigger_request(self, request, *args, **kwargs) -> response.Response:  # pylint: disable=unused-argument
         """Request an endpoint with the given parameters.
 
@@ -82,7 +85,7 @@ class EndpointViewSet(BaseModelViewSet):
 
         task = async_request.delay(
             endpoint.reference,
-            serializer.validated_data.get("authentication"),
+            serializer.data.get("authentication"),
             serializer.validated_data.get("params"),
             serializer.validated_data.get("headers"),
             serializer.validated_data.get("body"),
@@ -98,7 +101,7 @@ class EndpointViewSet(BaseModelViewSet):
 class TraceViewSet(viewsets.ReadOnlyModelViewSet[models.Trace]):
     """Readonly viewset for :class:`compyle.proxy.models.Trace`."""
 
-    queryset = models.Endpoint.objects.all().select_related("endpoint", "endpoint__service", "authentication")
+    queryset = models.Trace.objects.all().select_related("endpoint", "endpoint__service", "authentication")
     serializer_class = serializers.TraceSerializer
 
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
