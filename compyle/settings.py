@@ -93,7 +93,9 @@ SPECTACULAR_SETTINGS = {
     "VERSION": __version__,
     "COMPONENT_SPLIT_REQUEST": True,
     "COMPONENT_SPLIT_PATCH": True,
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
     "POSTPROCESSING_HOOKS": ["drf_standardized_errors.openapi_hooks.postprocess_schema_enums"],
+    "ENUM_NAME_OVERRIDES": {},
 }
 
 DRF_STANDARDIZED_ERRORS = {
