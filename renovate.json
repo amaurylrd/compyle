@@ -6,5 +6,11 @@
     "enabledManagers": [
         "poetry",
         "pre-commit"
-    ]
+    ],
+    "packageRules": [
+    {
+      "matchPackageNames": ["python", "django"],
+      "enabled": false
+    }
+  ]
 }

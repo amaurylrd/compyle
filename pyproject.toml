@@ -26,7 +26,7 @@ python = "~3.10"
 python-semantic-release = "^8.0.0"
 python-dotenv = "^1.0.0"
 
-django = ">=5.2,<5.3"
+django = ">=4.0,<5.0"
 djangorestframework = "^3.16"
 django-cryptography = "^1.1"
 django-admin-action-tools = "^1.2.0"
@@ -91,11 +91,8 @@ sphinxcontrib-httpdomain = "^1.8"
 sphinxcontrib-mermaid = "^0.9"
 
 [tool.poetry.group.test.dependencies]
+coverage = "^7.0"
 faker = "^23.0.0"
-
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.2.0"]
 
 [tool.isort]
 profile = "black"
@@ -133,3 +130,33 @@ line-length = 120
 [tool.codespell]
 ignore-words-list = "assertIn"
 skip = '*.po,poetry.lock,openapi.yml,CHANGELOG.md,**/fixtures/*,**/migrations/*,'
+
+[tool.coverage.run]
+branch = true
+command_line = "manage.py test -v2 --parallel"
+concurrency = ["multiprocessing"]
+parallel = true
+omit = [
+    '*/apps.py',
+    '*/tests*',
+    '*/settings*',
+    '*/migrations/*',
+    '*/celery.py',
+    '*/utils.py',
+    '*/wsgi.py',
+]
+source = ["compyle"]
+
+[tool.coverage.report]
+fail_under = 100
+omit = [
+    '*/apps.py',
+    '*/tests/*',
+    '*/settings/*',
+    '*/migrations/*',
+    '*/celery.py',
+]
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.2.0"]
