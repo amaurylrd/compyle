@@ -87,9 +87,11 @@ repos:
     hooks:
       - id: gitleaks
 
-  - repo: https://github.com/remastr/pre-commit-django-check-migrations
-    rev: v0.1.0
+  - repo: local
     hooks:
-      - id: check-migrations-created
-        args: [--exec-command=poetry run python, --manage-path=./manage.py]
-        files: "^compyle/.*\\.py$"
+      - id: pre-commit-django-migrations
+        name: Check django migrations
+        entry: ./manage.py makemigrations --check --dry-run
+        language: system
+        types: [python]
+        pass_filenames: false

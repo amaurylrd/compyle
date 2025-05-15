@@ -11,7 +11,7 @@ from compyle.proxy.urls import urlpatterns as proxy_urlpatterns
 admin.site.site_title = _("Compyle")
 admin.site.site_header = _("Compyle %s") % __version__
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
     path("proxy/", include((proxy_urlpatterns, "proxy"), namespace="proxy")),
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
