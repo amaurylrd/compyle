@@ -75,14 +75,3 @@ class AuthMethod(TextChoices):
     OAUTH_CLIENT_CREDENTIALS_AUTHENTICATION = "oauth_client_credentials_authentication", pgettext_lazy(
         "authentication method", "OAuth authentication (grant type 'client_credentials')"
     )
-
-
-# twitch
-# - get_token = grant_type: client_cred
-# - refresh = auth: bearer OAuth2 token
-
-# yt
-# get_token: grant_type: authorizatin_code
-# refresh: grant_type refresh
-
-# TODO https://git.spikeelabs.fr/spk/code/unyc/distributor/distributor-app/-/blob/main/event_broker/traceability/components/auth.py
