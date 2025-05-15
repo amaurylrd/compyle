@@ -340,7 +340,7 @@ class Authentication(BaseModel, CreateUpdateMixin):
         """Check whether the access token is still valid.
 
         Returns:
-            True if the access token exists and has not expired; False otherwise.
+            True if the access token exists and has not expired, False otherwise.
         """
         return self.access_token and self.expires_at and self.expires_at > timezone.now()
 

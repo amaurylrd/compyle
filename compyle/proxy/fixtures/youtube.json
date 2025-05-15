@@ -9,5 +9,31 @@
             "created_at": "2024-01-01T00:00:00Z",
             "updated_at": "2024-01-01T00:00:00Z"
         }
+    },
+    {
+        "model": "proxy.endpoint",
+        "pk": "7a0ad639-4f7b-4221-9f69-03d556013df2",
+        "fields": {
+            "service": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "name": "Categegory",
+            "base_url": "https://www.googleapis.com/youtube/v3",
+            "slug": "/videoCategories",
+            "method": "get",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "proxy.endpoint",
+        "pk": "bdc93207-2103-4ba3-8aa4-377e8776b986",
+        "fields": {
+            "service": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "name": "Upload",
+            "base_url": "https://www.googleapis.com/upload/youtube/v3",
+            "slug": "/videos",
+            "method": "post",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
     }
 ]
