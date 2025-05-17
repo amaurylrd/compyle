@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django_json_widget",
     "corsheaders",
     "compyle.proxy",
+    "compyle.workflow",
 ]
 
 MIDDLEWARE = [
