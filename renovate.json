@@ -7,6 +7,7 @@
         "poetry",
         "pre-commit"
     ],
+    "baseBranches": ["alpha"],
     "packageRules": [
     {
       "matchPackageNames": ["python", "django"],
