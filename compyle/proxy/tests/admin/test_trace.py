@@ -65,6 +65,13 @@ class TraceAdminTest(BaseAdminTest):
         self.assertEqual(len(response.context["cl"].result_list), 1)
         self.assertEqual(response.context["cl"].result_list[0].reference, reference)
 
+    def test_can_list_traces_search_by_partial_reference(self) -> None:
+        traces = [get_trace() for _ in range(3)]
+        response = self.client.get(trace_admin_changelist_url, {"q": "-trace-"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.context["cl"].result_list), len(traces))
+
     def test_can_list_traces_search_by_endpoint_reference(self) -> None:
         endpoint = get_endpoint()
         traces = [get_trace(endpoint=endpoint), get_trace(endpoint=endpoint), get_trace()]
@@ -76,6 +83,19 @@ class TraceAdminTest(BaseAdminTest):
         self.assertCountEqual(
             [trace.reference for trace in response.context["cl"].result_list],
             [trace.reference for trace in traces if trace.endpoint.reference == endpoint.reference],
+        )
+
+    def test_can_list_traces_search_by_partial_reference(self) -> None:
+        endpoint = get_endpoint()
+        traces = [get_trace(endpoint=endpoint), get_trace(endpoint=endpoint), get_trace()]
+        partial_reference = endpoint.reference[:-1]
+
+        response = self.client.get(trace_admin_changelist_url, {"q": partial_reference})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(
+            [trace.reference for trace in response.context["cl"].result_list],
+            [trace.reference for trace in traces if partial_reference in trace.endpoint.reference],
         )
 
     def test_can_list_traces_search_by_endpoint_name(self) -> None:

@@ -56,7 +56,7 @@ class TraceFilterSet(FilterSet):
         method="filter_status_prefix",
     )
 
-    # pylint: disable=unused-argument, no-self-use
+    # pylint: disable=unused-argument
     def filter_status_prefix(self, queryset: QuerySet[models.Trace], name: str, value: str) -> QuerySet[models.Trace]:
         """Filters the queryset to include only traces whose status code starts with the given prefix.
 

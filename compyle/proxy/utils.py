@@ -79,7 +79,7 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
     return urlunparse(parsed._replace(path=path))
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-positional-arguments
 def request_with_retry(
     method: HttpMethod,
     url: str,

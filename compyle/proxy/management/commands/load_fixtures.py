@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 class Command(BaseCommand):
     help = _("Load demo fixture data")
 
-    # pylint: disable=unused-argument, no-self-use
+    # pylint: disable=unused-argument
     def handle(self, *args, **options) -> None:
         """Handle the command `load_fixtures`."""
         call_command("loaddata", "twitch.json")

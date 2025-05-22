@@ -94,6 +94,7 @@ class EndpointAdminTest(BaseAdminTest):
 
     def test_can_delete_endpoint_form_submission(self) -> None:
         endpoint = get_endpoint()
+
         response = self.client.post(endpoint_admin_delete_url(endpoint.pk), {"post": "yes"}, follow=True)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.reason_phrase)
@@ -101,15 +102,15 @@ class EndpointAdminTest(BaseAdminTest):
 
     def test_cannot_delete_endpoint_as_non_staff_user(self) -> None:
         endpoint = get_endpoint()
-        self.client.logout()
 
+        self.client.logout()
         response = self.client.post(endpoint_admin_delete_url(endpoint.pk), {"post": "yes"}, follow=True)
 
         self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_302_FOUND), response.reason_phrase)
+        self.assertTrue(models.Endpoint.objects.filter(pk=endpoint.pk).exists())
         self.assertIn(
             "/admin/login/", response.redirect_chain[0][0] if response.redirect_chain else response.request["PATH_INFO"]
         )
-        self.assertTrue(models.Endpoint.objects.filter(pk=endpoint.pk).exists())
 
     def test_get_endpoint_readonly_fields(self) -> None:
         self.assertSetEqual(set(self.endpoint_admin.get_readonly_fields(self.request)), self.change_read_only_fields)
@@ -157,6 +158,13 @@ class EndpointAdminTest(BaseAdminTest):
         self.assertEqual(len(response.context["cl"].result_list), 1)
         self.assertEqual(response.context["cl"].result_list[0].reference, reference)
 
+    def test_can_list_endpoints_search_by_partial_reference(self) -> None:
+        endpoints = [get_endpoint() for _ in range(3)]
+        response = self.client.get(endpoint_admin_changelist_url, {"q": "-endpoint-"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.context["cl"].result_list), len(endpoints))
+
     def test_can_list_endpoints_search_by_name(self) -> None:
         endpoints = [
             get_endpoint(name="Google Maps"),
@@ -202,6 +210,19 @@ class EndpointAdminTest(BaseAdminTest):
         self.assertCountEqual(
             [endpoint.reference for endpoint in response.context["cl"].result_list],
             [endpoint.reference for endpoint in endpoints if endpoint.service.reference == service.reference],
+        )
+
+    def test_can_list_endpoints_search_by_service_partial_reference(self) -> None:
+        service = get_service()
+        endpoints = [get_endpoint(service=service), get_endpoint(service=service), get_endpoint()]
+        partial_reference = service.reference[:-1]
+
+        response = self.client.get(endpoint_admin_changelist_url, {"q": partial_reference})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(
+            [endpoint.reference for endpoint in response.context["cl"].result_list],
+            [endpoint.reference for endpoint in endpoints if partial_reference in endpoint.service.reference],
         )
 
     def test_can_list_endpoints_search_by_service_name(self) -> None:

@@ -27,8 +27,7 @@ request_view = EndpointViewSet.as_view({"post": "trigger_request"})
 class EndpointTest(BaseApiTest):
     """TestCase for :class:`comprle.proxy.views.EndpointViewSet`."""
 
-    # pylint: disable=invalid-name
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=invalid-name
         super().setUp()
 
         self.minimal_payload = {
@@ -443,6 +442,7 @@ class EndpointTest(BaseApiTest):
             response = detail_view(request, pk=endpoint.pk)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertTrue(Endpoint.objects.filter(pk=endpoint.pk).exists())
 
     def test_cannot_delete_unknown_endpoint(self) -> None:
         with self.assertNumQueries(1):

@@ -8,7 +8,7 @@ from rest_framework.test import force_authenticate
 
 from compyle.lib.test import BaseApiTest
 from compyle.proxy.models import Endpoint, Service
-from compyle.proxy.tests.factories import get_endpoint, get_service
+from compyle.proxy.tests.factories import get_service
 from compyle.proxy.views import ServiceViewSet
 
 list_url = reverse("proxy:services-list")
@@ -23,8 +23,7 @@ detail_view = ServiceViewSet.as_view(
 class ServiceTestCase(BaseApiTest):
     """TestCase for :class:`comprle.proxy.views.ServiceViewSet`."""
 
-    # pylint: disable=invalid-name
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=invalid-name
         super().setUp()
 
         self.minimal_payload = {
@@ -446,6 +445,7 @@ class ServiceTestCase(BaseApiTest):
             response = detail_view(request, pk=service.pk)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertTrue(Service.objects.filter(pk=service.pk).exists())
 
     def test_cannot_delete_unknown_service(self) -> None:
         with self.assertNumQueries(1):

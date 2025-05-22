@@ -1,0 +1,13 @@
+name: Run python unittests and coverage
+description: Run python unittests and report coverage
+
+runs:
+  using: composite
+  steps:
+  - run: |
+      export DJANGO_SETTINGS_MODULE=compyle.settings
+      poetry run coverage erase
+      poetry run coverage run manage.py test
+      poetry run coverage combine
+      poetry run coverage report --show-missing
+    shell: bash

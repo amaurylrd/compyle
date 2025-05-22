@@ -7,7 +7,6 @@
         "poetry",
         "pre-commit"
     ],
-    "allowedBranches": ["alpha"],
     "baseBranches": ["alpha"],
     "packageRules": [
     {

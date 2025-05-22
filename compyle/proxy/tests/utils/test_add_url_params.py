@@ -1,11 +1,11 @@
 # pylint: disable=missing-function-docstring
 
-import unittest
+from django.test import SimpleTestCase
 
 from compyle.proxy import utils
 
 
-class TestAddParams(unittest.TestCase):
+class TestAddParams(SimpleTestCase):
     """TestCase for the `add_url_params` method in the utils module."""
 
     def test_add_single_param(self) -> None:

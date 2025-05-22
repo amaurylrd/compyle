@@ -1,0 +1,8 @@
+name: Run pylama
+description: Lint python code with pylama
+
+runs:
+  using: composite
+  steps:
+  - run: poetry run pylama ${{ github.workspace }}/compyle -o pylama.ini
+    shell: bash

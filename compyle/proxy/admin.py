@@ -323,3 +323,16 @@ class AuthenticationAdmin(BaseCreateUpdateModelAdmin):
             The queryset with the annotations.
         """
         return super().get_queryset(request).prefetch_related("auth_traces", "auth_traces__endpoint")
+
+    def is_token_valid(self, obj: models.Authentication) -> bool:  # pragma: no cover
+        """Retrieve the property 'is_token_valid" to be displayed as on and off indicator instead of default string.
+
+        Args:
+            The object instance.
+
+        Returns:
+            The boolean value.
+        """
+        return obj.is_token_valid
+
+    is_token_valid.boolean = True  # type: ignore[attr-defined]

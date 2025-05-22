@@ -137,7 +137,6 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         ]
         read_only_fields = fields
 
-    # pylint: disable=no-self-use
     def get_status_type(self, obj: models.Trace) -> str:
         """Get the status type of the trace based on its status code.
 

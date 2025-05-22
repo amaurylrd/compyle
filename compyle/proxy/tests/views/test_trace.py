@@ -7,7 +7,6 @@ from rest_framework import status
 from rest_framework.test import force_authenticate
 
 from compyle.lib.test import BaseApiTest
-from compyle.proxy.models import Trace
 from compyle.proxy.tests.factories import get_authentication, get_endpoint, get_trace
 from compyle.proxy.views import TraceViewSet
 
@@ -401,6 +400,26 @@ class TraceTest(BaseApiTest):
             response = detail_view(request, pk=str(uuid.uuid4()))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
+
+    def test_trace_status_type_field(self) -> None:
+        trace_info = [
+            (100, "INFORMATIONAL"),
+            (200, "SUCCESS"),
+            (301, "REDIRECT"),
+            (404, "CLIENT_ERROR"),
+            (500, "SERVER_ERROR"),
+            (None, None),
+        ]
+
+        for status_code, expected_status_type in trace_info:
+            trace = get_trace(status_code=status_code)
+
+            request = self.factory.get(detail_url)
+            force_authenticate(request, user=self.user)
+            response = detail_view(request, pk=trace.pk)
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+            self.assertEqual(response.data["status_type"], expected_status_type)
 
     def cannot_create_trace(self) -> None:
         with self.assertNumQueries(0):

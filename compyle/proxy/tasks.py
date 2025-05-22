@@ -4,7 +4,7 @@ from celery import shared_task
 from requests_oauthlib import OAuth2Session
 
 
-# pylint: disable=unused-argument, too-many-locals, too-many-arguments
+# pylint: disable=unused-argument, too-many-locals, too-many-arguments, too-many-positional-arguments
 @shared_task(bind=True)
 def async_request(
     self,
@@ -15,6 +15,25 @@ def async_request(
     body: dict[str, Any] | None,
     timeout: float | None = None,
 ) -> Any:
+    """Perform an asynchronous HTTP request to a specified endpoint with optional authentication.
+
+    Args:
+        self: The task instance (automatically passed by Celery).
+        endpoint_id: The reference ID of the Endpoint to request.
+        authentication_id: The reference ID of the Authentication object or None.
+        params: The URL parameters to be applied to the endpoint URL.
+        headers: The HTTP headers to include in the request.
+        body: The request payload for methods like POST or PUT or None.
+        timeout: Optional timeout in seconds for the request. Defaults to None.
+
+    Returns:
+       The parsed response from the endpoint.
+
+    Raises:
+        Endpoint.DoesNotExist: If the endpoint with the given ID does not exist.
+        Authentication.DoesNotExist: If the authentication with the given ID does not exist.
+        Requests exceptions may propagate if the HTTP request fails.
+    """
     # pylint: disable=import-outside-toplevel
     from compyle.proxy.choices import AuthFlow
     from compyle.proxy.models import Authentication, Endpoint, Trace
