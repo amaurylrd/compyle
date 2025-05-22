@@ -95,6 +95,7 @@ sphinxcontrib-mermaid = "^0.9"
 [tool.poetry.group.test.dependencies]
 coverage = "^7.0"
 faker = "^23.0.0"
+tblib = "^3.1.0"
 
 [tool.isort]
 profile = "black"

@@ -11,7 +11,7 @@ from compyle.proxy import choices
 class TestHttpMethod(TestCase):
     """TestCase for the `HttpMethod` enum in the choices module."""
 
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=invalid-name
         super().setUp()
 
         self.url = "https://localhost"

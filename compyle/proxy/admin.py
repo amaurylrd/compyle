@@ -84,7 +84,6 @@ class EndpointAdmin(ActionFormMixin, DjangoObjectActions, BaseCreateUpdateModelA
         "method",
         "base_url",
         "slug",
-        "response_type",
         "created_at",
         "updated_at",
     ]  # TODO auth_method
@@ -154,7 +153,7 @@ class EndpointAdmin(ActionFormMixin, DjangoObjectActions, BaseCreateUpdateModelA
         try:
             task = async_request.delay(
                 obj.reference,
-                form.cleaned_data.get("authentication"),
+                form.data.get("authentication"),
                 form.cleaned_data.get("params"),
                 form.cleaned_data.get("headers"),
                 form.cleaned_data.get("payload"),
@@ -166,7 +165,7 @@ class EndpointAdmin(ActionFormMixin, DjangoObjectActions, BaseCreateUpdateModelA
                 _("The endpoint has been successfully requested: task {task_id}.").format(task_id=task.id),
                 messages.SUCCESS,
             )
-        except Exception as exception:
+        except Exception as exception:  # pylint: disable=broad-except
             self.message_user(
                 request,
                 _("An error occurred while requesting the endpoint: {error}.").format(error=str(exception)),
@@ -175,7 +174,7 @@ class EndpointAdmin(ActionFormMixin, DjangoObjectActions, BaseCreateUpdateModelA
 
 
 @register(models.Trace)
-class TraceAdmin(ModelAdmin, ReadOnlyAdminMixin):
+class TraceAdmin(ReadOnlyAdminMixin, ModelAdmin):
     """Admin for :class:`compyle.proxy.models.Trace`."""
 
     list_display = [
