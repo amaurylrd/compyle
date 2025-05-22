@@ -24,7 +24,7 @@ class EndpointInline(admin.TabularInline):
         "created_at",
         "updated_at",
     ]
-    extra = 1
+    extra = 0
     ordering = ["-created_at"]
 
 

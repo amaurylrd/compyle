@@ -74,6 +74,7 @@ def get_endpoint(
 
     if reference is DEFAULT:
         reference = next(ENDPOINT_REFERENCE_SEQUENCE)
+
     if name is DEFAULT:
         name = _FAKER.word()
     if base_url is DEFAULT:
@@ -209,7 +210,7 @@ def get_authentication(
     if refresh_token is DEFAULT:
         refresh_token = None
 
-    user = models.Authentication(
+    authentication = models.Authentication(
         reference=reference,
         email=email,
         login=login,
@@ -223,6 +224,6 @@ def get_authentication(
     )
 
     if commit:
-        user.save()
+        authentication.save()
 
-    return user
+    return authentication

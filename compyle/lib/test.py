@@ -59,3 +59,5 @@ class BaseAdminTest(BaseApiTest):
 
         self.site = AdminSite()
         self.client.force_login(self.user)
+        self.request = self.factory.get("/")
+        self.request.user = self.user
