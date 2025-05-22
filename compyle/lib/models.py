@@ -40,4 +40,4 @@ class BaseModel(models.Model):
         abstract = True
 
     def __str__(self) -> str:
-        return self.reference
+        return str(self.reference)

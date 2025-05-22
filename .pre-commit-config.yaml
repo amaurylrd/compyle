@@ -90,8 +90,8 @@ repos:
   - repo: local
     hooks:
       - id: pre-commit-django-migrations
-        name: Check django migrations
-        entry: ./manage.py makemigrations --check --dry-run
+        name: check django migrations
+        entry: env DJANGO_SETTINGS_MODULE=compyle.settings poetry run python manage.py makemigrations --check --dry-run
         language: system
         types: [python]
         pass_filenames: false

@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring
 
-import unittest
 from unittest import mock
 
+from django.test import SimpleTestCase
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
 from rest_framework import status
@@ -11,12 +11,12 @@ from compyle.proxy import utils
 from compyle.proxy.choices import HttpMethod
 
 
-class TestRequest(unittest.TestCase):
+class TestRequest(SimpleTestCase):
     """TestCase for the `request_with_retry` method in the utils module."""
 
     maxDiff = None
 
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=invalid-name
         super().setUp()
 
         self.url = "https://example.com"

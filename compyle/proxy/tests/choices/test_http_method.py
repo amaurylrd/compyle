@@ -22,6 +22,26 @@ class TestHttpMethod(TestCase):
         self.assertEqual(choices.HttpMethod.PATCH.func, requests.patch)
         self.assertEqual(choices.HttpMethod.DELETE.func, requests.delete)
 
+    def test_http_method_repr(self) -> None:
+        for method in [
+            choices.HttpMethod.GET,
+            choices.HttpMethod.POST,
+            choices.HttpMethod.PUT,
+            choices.HttpMethod.PATCH,
+            choices.HttpMethod.DELETE,
+        ]:
+            self.assertEqual(repr(method), repr(method.func))
+
+    def test_http_method_str(self) -> None:
+        for method in [
+            choices.HttpMethod.GET,
+            choices.HttpMethod.POST,
+            choices.HttpMethod.PUT,
+            choices.HttpMethod.PATCH,
+            choices.HttpMethod.DELETE,
+        ]:
+            self.assertEqual(str(method), str(method.func))
+
     @mock.patch("requests.api.request")
     def test_can_listener_http_verb_request_post(self, mock_request: mock.MagicMock) -> None:
         http_method = choices.HttpMethod.POST

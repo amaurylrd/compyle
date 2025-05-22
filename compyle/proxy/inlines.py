@@ -50,21 +50,10 @@ class AuthenticationTraceInline(ReadOnlyTabularInline):
     model = models.Trace
     fields = [
         "reference",
-        "endpoint_reference",
+        "endpoint",
         "started_at",
         "completed_at",
         "status_code",
     ]
     readonly_fields = fields
     ordering = ["-started_at"]
-
-    def endpoint_reference(self, obj: models.Trace) -> str | None:
-        """Return the reference of the related endpoint for the trace.
-
-        Args:
-            obj: The Trace instance.
-
-        Returns:
-            str: The reference of the related Endpoint.
-        """
-        return obj.endpoint.reference if obj.endpoint else None

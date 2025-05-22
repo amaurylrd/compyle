@@ -63,7 +63,7 @@ class AuthFlow(TextChoices):
     API_KEY = "api_key", pgettext_lazy("authentication flow", "API key")
     BASIC_AUTHENTICATION = "basic_authentication", pgettext_lazy("authentication flow", "Basic authentication")
     OAUTH2_AUTHORIZATION_CODE = "authorization code", pgettext_lazy("authentication flow", "Authorization code")
-    OAUTH2_ClIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentication flow", "Client credentials")
+    OAUTH2_CLIENT_CREDENTIALS = "client credentials", pgettext_lazy("authentication flow", "Client credentials")
 
 
 class AuthMethod(TextChoices):

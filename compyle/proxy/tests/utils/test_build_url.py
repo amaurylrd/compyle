@@ -1,11 +1,11 @@
 # pylint: disable=missing-function-docstring
 
-import unittest
+from django.test import SimpleTestCase
 
 from compyle.proxy import utils
 
 
-class TestBuildUrl(unittest.TestCase):
+class TestBuildUrl(SimpleTestCase):
     """TestCase for the `build_url` method in the utils module."""
 
     def test_basic_url_and_slug(self) -> None:

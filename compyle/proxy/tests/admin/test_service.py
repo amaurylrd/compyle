@@ -98,10 +98,10 @@ class ServiceAdminTest(BaseAdminTest):
         response = self.client.post(service_admin_change_url(service.pk), {"post": "yes"}, follow=True)
 
         self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_302_FOUND), response.reason_phrase)
+        self.assertTrue(models.Service.objects.filter(pk=service.pk).exists())
         self.assertIn(
             "/admin/login/", response.redirect_chain[0][0] if response.redirect_chain else response.request["PATH_INFO"]
         )
-        self.assertTrue(models.Service.objects.filter(pk=service.pk).exists())
 
     def test_get_service_readonly_fields(self) -> None:
         self.assertSetEqual(set(self.service_admin.get_readonly_fields(self.request)), self.change_read_only_fields)

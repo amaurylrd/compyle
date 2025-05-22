@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name
+
 from datetime import datetime
 
 from django.contrib.admin.sites import AdminSite
@@ -6,7 +8,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, APITestCase
 
-User = get_user_model()  # pylint: disable=invalid-name
+User = get_user_model()
 
 
 class BaseTestCase(TestCase):
@@ -14,13 +16,11 @@ class BaseTestCase(TestCase):
 
     maxDiff = None
 
-    # pylint: disable=invalid-name
     def setUp(self) -> None:
         """Set up the test environment with user and anonymous_user before each test."""
         self.user = self.create_superuser()
         self.anonymous_user = AnonymousUser()
 
-    # pylint: disable=no-self-use
     def create_superuser(self) -> User:  # type: ignore
         """Create and return a Django superuser.
 
@@ -42,7 +42,6 @@ class BaseTestCase(TestCase):
 class BaseApiTest(APITestCase, BaseTestCase):
     """A test case class for testing API functionality."""
 
-    # pylint: disable=invalid-name
     def setUp(self) -> None:
         """Set up the test environment with factory before each test."""
         super().setUp()

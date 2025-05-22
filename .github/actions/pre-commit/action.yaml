@@ -1,0 +1,21 @@
+name: Run pre-commit hook
+description: Run pre-commit hook
+
+inputs:
+  extra-args:
+    description: List of options to pass to pre-commit
+    default: "--all-files"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v3
+      with:
+        path: ~/.cache/pre-commit
+        key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+    - run: |
+        chmod +x manage.py
+        poetry run pre-commit install --install-hooks
+        poetry run pre-commit run --show-diff-on-failure --color=always ${{ inputs.extra-args }}
+      shell: bash

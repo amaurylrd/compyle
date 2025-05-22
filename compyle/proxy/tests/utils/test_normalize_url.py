@@ -1,11 +1,11 @@
 # pylint: disable=missing-function-docstring
 
-import unittest
+from django.test import SimpleTestCase
 
 from compyle.proxy import utils
 
 
-class TestNormalizeUrl(unittest.TestCase):
+class TestNormalizeUrl(SimpleTestCase):
     """TestCase for the `normalize_url` method in the utils module."""
 
     def test_add_trailing_slash_when_missing(self) -> None:

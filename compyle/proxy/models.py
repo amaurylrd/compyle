@@ -54,7 +54,7 @@ class Service(BaseModel, CreateUpdateMixin):
         verbose_name_plural = _("services")
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
 
 class Endpoint(BaseModel, CreateUpdateMixin):
@@ -111,7 +111,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         verbose_name_plural = _("endpoints")
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
     # TODO build_header Accept: application/xml
     # TODO build_header Content-Type: application/json
@@ -332,7 +332,7 @@ class Authentication(BaseModel, CreateUpdateMixin):
         verbose_name_plural = _("authentications")
 
     def __str__(self) -> str:
-        return self.email
+        return str(self.email)
 
     @property
     @admin.display(description=_("is token valid"), boolean=True)
@@ -342,7 +342,7 @@ class Authentication(BaseModel, CreateUpdateMixin):
         Returns:
             True if the access token exists and has not expired, False otherwise.
         """
-        return self.access_token and self.expires_at and self.expires_at > timezone.now()
+        return bool(self.access_token and self.expires_at and self.expires_at > timezone.now())
 
     def update_token(self, token: dict[str, Any]) -> None:
         """Update the access token and refresh token.

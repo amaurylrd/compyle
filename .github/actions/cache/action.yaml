@@ -1,0 +1,36 @@
+name: Install python and poetry
+description: Load python and poetry dependencies from cache
+
+inputs:
+  python-version:
+    description: Python version to use for restoring and saving the cache
+    default: "3.10"
+  poetry-version:
+    description: Poetry minimal version to use for restoring and saving the cache
+    default: "1.3.2"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
+
+    - name: Install poetry ${{ inputs.poetry-version }}
+      shell: bash
+      run: |
+        pipx install poetry>=${{ inputs.poetry-version }}
+        poetry self add poetry-plugin-export
+
+    - name: Set up python ${{ inputs.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: poetry
+        cache-dependency-path: poetry.lock
+
+    - name: Install project dependencies
+      shell: bash
+      run: |
+        poetry env use ${{ inputs.python-version }}
+        poetry config virtualenvs.in-project true
+        poetry config virtualenvs.create true
+        poetry install --no-interaction --no-ansi
