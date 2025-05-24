@@ -146,6 +146,7 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         Returns:
             The status type of the trace or None if not applicable.
         """
+        # TODO faire un choices ou juste passer en minnuscule les trucs ou juste le retirer
         if obj.status_code:
             if status.is_informational(obj.status_code):
                 return "INFORMATIONAL"
