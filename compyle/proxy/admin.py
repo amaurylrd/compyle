@@ -199,6 +199,7 @@ class TraceAdmin(ReadOnlyAdminMixin, ModelAdmin):
             {
                 "fields": (
                     "reference",
+                    "authentication",
                     "endpoint",
                     "method",
                     "url",
@@ -210,21 +211,6 @@ class TraceAdmin(ReadOnlyAdminMixin, ModelAdmin):
                 )
             },
         ),
-        # (
-        #     _("Technical info"),
-        #     {
-        #         "classes": ("technical-info",),
-        #         "fields": (
-        #             "request_method",
-        #             "request_url",
-        #             "request_headers",
-        #             "request_body",
-        #             "response_headers",
-        #             "response_body",
-        #         ),
-        #         "description": _("These fields are automatically managed."),
-        #     },
-        # ),
     ]
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[models.Trace]:
@@ -256,7 +242,6 @@ class AuthenticationAdmin(BaseCreateUpdateModelAdmin):
         "created_at",
         "updated_at",
     ]
-    # todo faire un truc pour le many2many ici
     search_fields = ["reference", "auth_traces__endpoint__reference"]
     list_filter = ["created_at", "updated_at"]
     ordering = ["-updated_at"]
@@ -280,18 +265,14 @@ class AuthenticationAdmin(BaseCreateUpdateModelAdmin):
         (
             choices.AuthFlow.BASIC_AUTHENTICATION.label,
             {
-                "fields": (
-                    "login",
-                    "password",
-                ),
+                "fields": (("login", "password"),),
             },
         ),
         (
             _("OAuth2"),
             {
                 "fields": (
-                    "client_id",
-                    "client_secret",
+                    ("client_id", "client_secret"),
                     "access_token",
                     "expires_at",
                     "refresh_token",
@@ -335,4 +316,4 @@ class AuthenticationAdmin(BaseCreateUpdateModelAdmin):
         """
         return obj.is_token_valid
 
-    is_token_valid.boolean = True  # type: ignore[attr-defined]
+    is_token_valid.boolean = True

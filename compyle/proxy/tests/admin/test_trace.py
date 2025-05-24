@@ -85,7 +85,7 @@ class TraceAdminTest(BaseAdminTest):
             [trace.reference for trace in traces if trace.endpoint.reference == endpoint.reference],
         )
 
-    def test_can_list_traces_search_by_partial_reference(self) -> None:
+    def test_can_list_traces_search_by_endpoint_partial_reference(self) -> None:
         endpoint = get_endpoint()
         traces = [get_trace(endpoint=endpoint), get_trace(endpoint=endpoint), get_trace()]
         partial_reference = endpoint.reference[:-1]

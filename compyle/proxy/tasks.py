@@ -4,7 +4,7 @@ from celery import shared_task
 from requests_oauthlib import OAuth2Session
 
 
-# pylint: disable=unused-argument, too-many-locals, too-many-arguments, too-many-positional-arguments
+# pylint: disable=unused-argument, too-many-locals, too-many-arguments
 @shared_task(bind=True)
 def async_request(
     self,

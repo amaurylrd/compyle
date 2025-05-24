@@ -5,7 +5,7 @@ from rest_framework import status
 
 from compyle.lib.test import BaseAdminTest
 from compyle.proxy import admin, models
-from compyle.proxy.tests.factories import get_authentication
+from compyle.proxy.tests.factories import get_authentication, get_trace
 
 authentication_admin_changelist_url = reverse("admin:proxy_authentication_changelist")
 authentication_admin_change_url = lambda pk: reverse("admin:proxy_authentication_change", args=(pk,))
@@ -44,7 +44,6 @@ class AuthenticationAdminTest(BaseAdminTest):
             "auth_traces-MIN_NUM_FORMS": "0",
             "auth_traces-MAX_NUM_FORMS": "1000",
         }
-        # TODO faire 3 paylaods
 
     def test_can_add_authentication(self) -> None:
         self.assertTrue(self.auth_admin.has_add_permission(self.request))
@@ -133,8 +132,8 @@ class AuthenticationAdminTest(BaseAdminTest):
         self.assertIn("/admin/login/", response.url)
 
     def test_can_list_authentications_search_by_reference(self) -> None:
-        auths = [get_authentication() for _ in range(3)]
-        reference = auths[0].reference
+        authentications = [get_authentication() for _ in range(3)]
+        reference = authentications[0].reference
 
         response = self.client.get(authentication_admin_changelist_url, {"q": reference})
 
@@ -143,11 +142,32 @@ class AuthenticationAdminTest(BaseAdminTest):
         self.assertEqual(response.context["cl"].result_list[0].reference, reference)
 
     def test_can_list_authentications_search_by_partial_reference(self) -> None:
-        auths = [get_authentication() for _ in range(3)]
+        authentications = [get_authentication() for _ in range(3)]
+
         response = self.client.get(authentication_admin_changelist_url, {"q": "-authentication-"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.reason_phrase)
-        self.assertEqual(len(response.context["cl"].result_list), len(auths))
+        self.assertEqual(len(response.context["cl"].result_list), len(authentications))
+
+    def test_can_list_authentications_search_by_trace_endpoint_reference(self) -> None:
+        authentications = [get_authentication() for _ in range(3)]
+        trace = get_trace(authentication=authentications[0])
+
+        response = self.client.get(authentication_admin_changelist_url, {"q": trace.endpoint.reference})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.reason_phrase)
+        self.assertEqual(len(response.context["cl"].result_list), 1)
+        self.assertEqual(response.context["cl"].result_list[0].reference, authentications[0].reference)
+
+    def test_can_list_authentications_search_by_trace_endpoint_partial_reference(self) -> None:
+        authentications = [get_authentication() for _ in range(3)]
+        _ = get_trace(authentication=authentications[0])
+
+        response = self.client.get(authentication_admin_changelist_url, {"q": "-endpoint-"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.reason_phrase)
+        self.assertEqual(len(response.context["cl"].result_list), 1)
+        self.assertEqual(response.context["cl"].result_list[0].reference, authentications[0].reference)
 
     def test_can_consult_authentication(self) -> None:
         authentication = get_authentication()
