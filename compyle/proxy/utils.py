@@ -79,7 +79,7 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
     return urlunparse(parsed._replace(path=path))
 
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments
+# pylint: disable=too-many-arguments
 def request_with_retry(
     method: HttpMethod,
     url: str,
@@ -89,6 +89,23 @@ def request_with_retry(
     timeout: float | None = None,
     **request_params,
 ) -> requests.Response:
+    """Requests the specified url with the specified HTTP method and query parameters.
+
+    Args:
+        method: the HTTP method to be used.
+        url: the URL to be requested.
+        retries: the number of retries. Defaults to 3.
+        backoff: the backoff factor in seconds. Defaults to 0.5.
+        jitter: the backoff jitter in seconds. Defaults to 0.5.
+        timeout: the request timeout in seconds. Defaults to None.
+        **request_params: the parameters to be used for the HTTP request.
+
+    Raises:
+        requests.exceptions.RequestException: if the request fails.
+
+    Returns:
+        The response of the request.
+    """
     with requests.Session() as session:
         # pylint: disable=unexpected-keyword-arg
         strategery = Retry(
