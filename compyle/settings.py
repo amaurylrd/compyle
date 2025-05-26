@@ -267,6 +267,13 @@ MEDIA_URL = "/media/"
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+LANGUAGES = [
+    ("en", "English"),
+]
+LOCALE_PATHS = [
+    os.path.join(STATIC_ROOT, "locale"),
+]
+
 SERVE_MEDIA = True
 
 CORS_ALLOW_CREDENTIALS = True

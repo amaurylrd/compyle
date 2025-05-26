@@ -391,7 +391,7 @@ class TraceTest(BaseApiTest):
         self.assertIn("completed_at", response.data)
         self.assertIn("headers", response.data)
         self.assertIn("payload", response.data)
-        self.assertIn("status_type", response.data)
+        self.assertIn("status", response.data)
 
     def test_cannot_retrieve_unknown_trace(self) -> None:
         with self.assertNumQueries(1):
@@ -401,17 +401,17 @@ class TraceTest(BaseApiTest):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
-    def test_trace_status_type_field(self) -> None:
+    def test_trace_status_field(self) -> None:
         trace_info = [
-            (100, "INFORMATIONAL"),
-            (200, "SUCCESS"),
-            (301, "REDIRECT"),
-            (404, "CLIENT_ERROR"),
-            (500, "SERVER_ERROR"),
+            (100, "Informational"),
+            (200, "Succes"),
+            (301, "Redirect"),
+            (404, "Client Error"),
+            (500, "Server Error"),
             (None, None),
         ]
 
-        for status_code, expected_status_type in trace_info:
+        for status_code, expected_status in trace_info:
             trace = get_trace(status_code=status_code)
 
             request = self.factory.get(detail_url)
@@ -419,7 +419,7 @@ class TraceTest(BaseApiTest):
             response = detail_view(request, pk=trace.pk)
 
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-            self.assertEqual(response.data["status_type"], expected_status_type)
+            self.assertEqual(response.data["status"], expected_status)
 
     def cannot_create_trace(self) -> None:
         with self.assertNumQueries(0):
