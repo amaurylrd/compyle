@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, status
 
 from compyle.proxy import models
@@ -118,7 +119,7 @@ class RequestSerializer(serializers.Serializer):
 class TraceSerializer(serializers.ModelSerializer[models.Trace]):
     """Serializer for :class:`compyle.proxy.models.Trace`."""
 
-    status_type = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Trace
@@ -129,7 +130,7 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
             "method",
             "url",
             "status_code",
-            "status_type",
+            "status",
             "headers",
             "payload",
             "endpoint",
@@ -137,7 +138,7 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         ]
         read_only_fields = fields
 
-    def get_status_type(self, obj: models.Trace) -> str:
+    def get_status(self, obj: models.Trace) -> str:
         """Get the status type of the trace based on its status code.
 
         Args:
@@ -148,15 +149,15 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         """
         if obj.status_code:
             if status.is_informational(obj.status_code):
-                return "INFORMATIONAL"
+                return _("Informational")
             if status.is_success(obj.status_code):
-                return "SUCCESS"
+                return _("Success")
             if status.is_redirect(obj.status_code):
-                return "REDIRECT"
+                return _("Redirect")
             if status.is_client_error(obj.status_code):
-                return "CLIENT_ERROR"
+                return _("Client Error")
             if status.is_server_error(obj.status_code):
-                return "SERVER_ERROR"
+                return _("Server Error")
         return None
 
 

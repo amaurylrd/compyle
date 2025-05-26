@@ -6,7 +6,6 @@
 !poetry.toml
 !poetry.lock
 !README.md
-compyle/settings/current.py
 **/__pycache__
 **/*.pyc
 **/*.pyo
