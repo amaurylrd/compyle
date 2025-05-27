@@ -2,7 +2,7 @@ from typing import Any
 
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers, status
+from rest_framework import serializers
 
 from compyle.proxy import models
 
@@ -57,9 +57,11 @@ class ServiceSerializer(serializers.ModelSerializer[models.Service]):
         fields = [
             "reference",
             "name",
+            "documentation_url",
             "trailing_slash",
             "auth_flow",
             "token_url",
+            "auth_url",
             "endpoints",
             "created_at",
             "updated_at",
@@ -101,8 +103,48 @@ class ServiceCreateSerializer(ServiceSerializer):
         return service
 
 
+class AuthorizeSerialize(serializers.Serializer):
+    """Serializer for authorize action."""
+
+    authentication = serializers.PrimaryKeyRelatedField(
+        queryset=models.Authentication.objects.all(),
+    )
+    redirect_uri = serializers.URLField(
+        help_text=_("The URI to redirect to after authorization. Must match the registered URI."),
+    )
+    scopes = serializers.ListField(
+        help_text=_("The list of OAuth2 scopes as URLs"),
+        child=serializers.URLField(),
+        required=False,
+        default=list,
+    )
+    state = serializers.CharField(
+        help_text=_("An opaque value used by the client to maintain state between the request and callback."),
+        required=False,
+        max_length=128,
+    )
+    login_hint = serializers.CharField(
+        help_text=_("The email address of the user to log in."),
+        required=False,
+    )
+
+
+class AuthorizationSerializer(serializers.Serializer):
+    """Serializer for the authorize action response."""
+
+    authorization_url = serializers.URLField()
+    state = serializers.CharField()
+
+
+class CallbackSerializer(serializers.Serializer):
+    """Serializer for callback action."""
+
+    code = serializers.CharField()
+    state = serializers.CharField()
+
+
 class RequestSerializer(serializers.Serializer):
-    """Serializer for request data."""
+    """Serializer for request action."""
 
     authentication = serializers.PrimaryKeyRelatedField(
         queryset=models.Authentication.objects.all(),
@@ -118,8 +160,6 @@ class RequestSerializer(serializers.Serializer):
 
 class TraceSerializer(serializers.ModelSerializer[models.Trace]):
     """Serializer for :class:`compyle.proxy.models.Trace`."""
-
-    status = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Trace
@@ -138,28 +178,6 @@ class TraceSerializer(serializers.ModelSerializer[models.Trace]):
         ]
         read_only_fields = fields
 
-    def get_status(self, obj: models.Trace) -> str:
-        """Get the status type of the trace based on its status code.
-
-        Args:
-            obj: The trace instance.
-
-        Returns:
-            The status type of the trace or None if not applicable.
-        """
-        if obj.status_code:
-            if status.is_informational(obj.status_code):
-                return _("Informational")
-            if status.is_success(obj.status_code):
-                return _("Success")
-            if status.is_redirect(obj.status_code):
-                return _("Redirect")
-            if status.is_client_error(obj.status_code):
-                return _("Client Error")
-            if status.is_server_error(obj.status_code):
-                return _("Server Error")
-        return None
-
 
 class AuthenticationSerializer(serializers.ModelSerializer[models.Authentication]):
     """Serializer for :class:`compyle.proxy.models.Authentication`."""
@@ -174,8 +192,23 @@ class AuthenticationSerializer(serializers.ModelSerializer[models.Authentication
             "client_id",
             "client_secret",
             "api_key",
+            "state",
+            "authorization_code",
             "access_token",
             "expires_at",
             "refresh_token",
         ]
         read_only_fields = fields
+
+
+class StatusCountSerializer(serializers.Serializer):
+    """Serialier for status pie chart."""
+
+    name = serializers.CharField()
+    value = serializers.IntegerField()
+
+
+class StatisticsSerializer(serializers.Serializer):
+    """Serialier for statistics."""
+
+    status_counter = StatusCountSerializer(many=True)

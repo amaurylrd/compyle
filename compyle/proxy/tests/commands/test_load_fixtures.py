@@ -11,7 +11,7 @@ class LoadFixturesCommandTest(SimpleTestCase):
     def test_load_fixtures_command_calls_loaddata_for_each_fixture(self, mock_call_command: mock.MagicMock) -> None:
         call_command("load_fixtures")
 
-        expected_calls = [("loaddata", "twitch.json"), ("loaddata", "youtube.json")]
+        expected_calls = [("loaddata", f"{fixture}.json") for fixture in ("twitch", "youtube", "tiktok")]
         actual_calls = [call.args for call in mock_call_command.call_args_list]
 
         self.assertEqual(actual_calls, expected_calls)

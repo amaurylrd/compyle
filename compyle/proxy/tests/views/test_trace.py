@@ -206,7 +206,7 @@ class TraceTest(BaseApiTest):
         )
 
     def test_can_list_traces_order_asc_by_status_code(self) -> None:
-        traces = [get_trace(status_code=i) for i in range(5)]
+        traces = [get_trace(status_code=status_code) for status_code in range(200, 205)]
 
         with self.assertNumQueries(2):
             request = self.factory.get(list_url, data={"ordering": "status_code"})
@@ -226,7 +226,7 @@ class TraceTest(BaseApiTest):
         )
 
     def test_can_list_traces_order_desc_by_status_code(self) -> None:
-        traces = [get_trace(status_code=i) for i in range(5)]
+        traces = [get_trace(status_code=status_code) for status_code in range(200, 205)]
 
         with self.assertNumQueries(2):
             request = self.factory.get(list_url, data={"ordering": "-status_code"})
@@ -333,7 +333,7 @@ class TraceTest(BaseApiTest):
         )
 
     def test_can_list_traces_filter_by_status_code(self) -> None:
-        traces = [get_trace(status_code=i) for i in range(5)]
+        traces = [get_trace(status_code=status_code) for status_code in range(200, 205)]
         status_code = traces[0].status_code
 
         request = self.factory.get(list_url, {"status_code": status_code})
@@ -345,7 +345,7 @@ class TraceTest(BaseApiTest):
         self.assertEqual(response.data["results"][0]["status_code"], status_code)
 
     def test_can_list_traces_filter_by_status_codes(self) -> None:
-        traces = [get_trace(status_code=i) for i in range(5)]
+        traces = [get_trace(status_code=status_code) for status_code in range(200, 205)]
         status_codes = [str(trace.status_code) for trace in traces[:2]]
 
         request = self.factory.get(list_url, {"status_code": ",".join(status_codes)})
@@ -400,26 +400,6 @@ class TraceTest(BaseApiTest):
             response = detail_view(request, pk=str(uuid.uuid4()))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
-
-    def test_trace_status_field(self) -> None:
-        trace_info = [
-            (100, "Informational"),
-            (200, "Succes"),
-            (301, "Redirect"),
-            (404, "Client Error"),
-            (500, "Server Error"),
-            (None, None),
-        ]
-
-        for status_code, expected_status in trace_info:
-            trace = get_trace(status_code=status_code)
-
-            request = self.factory.get(detail_url)
-            force_authenticate(request, user=self.user)
-            response = detail_view(request, pk=trace.pk)
-
-            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-            self.assertEqual(response.data["status"], expected_status)
 
     def cannot_create_trace(self) -> None:
         with self.assertNumQueries(0):

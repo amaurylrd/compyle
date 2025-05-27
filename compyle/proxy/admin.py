@@ -42,9 +42,11 @@ class ServiceAdmin(BaseCreateUpdateModelAdmin):
                 "fields": (
                     "reference",
                     "name",
+                    "documentation_url",
                     "trailing_slash",
                     "auth_flow",
                     "token_url",
+                    "auth_url",
                 )
             },
         ),
@@ -94,8 +96,8 @@ class EndpointAdmin(ActionFormMixin, DjangoObjectActions, BaseCreateUpdateModelA
     ]
 
     search_fields = ["reference", "name", "service__reference", "service__name"]
-    list_filter = ["created_at", "updated_at"]
-    ordering = ["-updated_at"]
+    list_filter = ["service", "created_at", "updated_at"]
+    ordering = ["service__reference", "-updated_at"]
 
     fieldsets = [
         (
@@ -158,6 +160,7 @@ class EndpointAdmin(ActionFormMixin, DjangoObjectActions, BaseCreateUpdateModelA
                 form.cleaned_data.get("headers"),
                 form.cleaned_data.get("payload"),
                 timeout=60,
+                commit=False,
             )
 
             self.message_user(
@@ -199,15 +202,15 @@ class TraceAdmin(ReadOnlyAdminMixin, ModelAdmin):
             {
                 "fields": (
                     "reference",
-                    "authentication",
-                    "endpoint",
+                    ("endpoint", "authentication"),
                     "method",
                     "url",
-                    "started_at",
-                    "completed_at",
-                    "status_code",
                     "headers",
                     "payload",
+                    "status_code",
+                    "status",
+                    "response",
+                    ("started_at", "completed_at"),
                 )
             },
         ),
@@ -269,10 +272,25 @@ class AuthenticationAdmin(BaseCreateUpdateModelAdmin):
             },
         ),
         (
+            choices.AuthFlow.OAUTH2_CLIENT_CREDENTIALS.label,
+            {
+                "fields": (("client_id", "client_secret"),),
+            },
+        ),
+        (
+            choices.AuthFlow.OAUTH2_AUTHORIZATION_CODE.label,
+            {
+                "fields": (
+                    "state",
+                    "redirect_uri",
+                    "authorization_code",
+                ),
+            },
+        ),
+        (
             _("OAuth2"),
             {
                 "fields": (
-                    ("client_id", "client_secret"),
                     "access_token",
                     "expires_at",
                     "refresh_token",

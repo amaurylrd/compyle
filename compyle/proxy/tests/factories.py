@@ -18,9 +18,11 @@ def get_service(
     commit: bool = DEFAULT,
     reference: str = DEFAULT,
     name: str = DEFAULT,
+    documentation_url: str = DEFAULT,
     trailing_slash: bool = DEFAULT,
     auth_flow: choices.AuthFlow | None = DEFAULT,
-    token_url: str | None = DEFAULT,
+    token_url: str = DEFAULT,
+    auth_url: str = DEFAULT,
 ) -> models.Service:
     if commit is DEFAULT:
         commit = True
@@ -30,19 +32,25 @@ def get_service(
 
     if name is DEFAULT:
         name = _FAKER.word()
+    if documentation_url is DEFAULT:
+        documentation_url = None
     if trailing_slash is DEFAULT:
         trailing_slash = True
     if auth_flow is DEFAULT:
         auth_flow = None
     if token_url is DEFAULT:
         token_url = None
+    if auth_url is DEFAULT:
+        auth_url = None
 
     service = models.Service(
         reference=reference,
         name=name,
+        documentation_url=documentation_url,
         trailing_slash=trailing_slash,
         auth_flow=auth_flow,
         token_url=token_url,
+        auth_url=auth_url,
     )
 
     if commit:
@@ -118,10 +126,11 @@ def get_trace(
     method: choices.HttpMethod = DEFAULT,
     url: str = DEFAULT,
     status_code: int = DEFAULT,
+    status: choices.HttpStatus | None = DEFAULT,
     headers: dict = DEFAULT,
     payload: dict = DEFAULT,
     endpoint: models.Endpoint = DEFAULT,
-    authentication: models.Authentication = DEFAULT,
+    authentication: models.Authentication | None = DEFAULT,
 ) -> models.Trace:
     if commit_related is DEFAULT:
         commit_related = True
@@ -137,6 +146,11 @@ def get_trace(
         completed_at = None
     if status_code is DEFAULT:
         status_code = None
+    if status is DEFAULT:
+        if status_code is not None:
+            status = choices.HttpStatus.from_status_code(status_code)
+        else:
+            status = None
     if headers is DEFAULT:
         headers = {}
     if payload is DEFAULT:
@@ -157,6 +171,7 @@ def get_trace(
         method=method,
         url=url,
         completed_at=completed_at,
+        status=status,
         status_code=status_code,
         headers=headers,
         payload=payload,
@@ -181,6 +196,9 @@ def get_authentication(
     client_id: str = DEFAULT,
     client_secret: str = DEFAULT,
     api_key: str = DEFAULT,
+    state: str = DEFAULT,
+    redirect_uri: str = DEFAULT,
+    authorization_code: str = DEFAULT,
     access_token: str = DEFAULT,
     expires_at: datetime = DEFAULT,
     refresh_token: str = DEFAULT,
@@ -203,6 +221,12 @@ def get_authentication(
         client_secret = None
     if api_key is DEFAULT:
         api_key = None
+    if state is DEFAULT:
+        state = None
+    if redirect_uri is DEFAULT:
+        redirect_uri = None
+    if authorization_code is DEFAULT:
+        authorization_code = None
     if access_token is DEFAULT:
         access_token = None
     if expires_at is DEFAULT:
@@ -218,6 +242,9 @@ def get_authentication(
         client_id=client_id,
         client_secret=client_secret,
         api_key=api_key,
+        state=state,
+        redirect_uri=redirect_uri,
+        authorization_code=authorization_code,
         access_token=access_token,
         expires_at=expires_at,
         refresh_token=refresh_token,
