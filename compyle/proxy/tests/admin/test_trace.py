@@ -99,7 +99,7 @@ class TraceAdminTest(BaseAdminTest):
         )
 
     def test_can_list_traces_search_by_endpoint_name(self) -> None:
-        endpoint = get_endpoint()
+        endpoint = get_endpoint(name="Clips")
         traces = [get_trace(endpoint=endpoint), get_trace(endpoint=endpoint), get_trace()]
 
         response = self.client.get(trace_admin_changelist_url, {"q": endpoint.name})

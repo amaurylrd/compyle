@@ -19,6 +19,9 @@ detail_view = ServiceViewSet.as_view(
     {"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}
 )
 
+statistics_url = reverse("proxy:services-statistics")
+statistics_view = ServiceViewSet.as_view({"get": "statistics"})
+
 
 class ServiceTestCase(BaseApiTest):
     """TestCase for :class:`comprle.proxy.views.ServiceViewSet`."""
@@ -465,3 +468,18 @@ class ServiceTestCase(BaseApiTest):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
         self.assertEqual(Service.objects.count(), 0)
+
+    def test_can_get_services_statistics(self) -> None:
+        request = self.factory.get(statistics_url)
+        force_authenticate(request, user=self.user)
+        response = statistics_view(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIn("status_counter", response.data)
+
+    def test_cannot_get_services_statistics_as_anonymous_user(self) -> None:
+        request = self.factory.get(statistics_url)
+        force_authenticate(request, user=self.anonymous_user)
+        response = statistics_view(request)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)

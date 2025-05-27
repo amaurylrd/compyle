@@ -31,6 +31,7 @@ class EndpointAdminTest(BaseAdminTest):
             "updated_at",
         }
         self.list_filter_fields = {
+            "service",
             "created_at",
             "updated_at",
         }
@@ -301,6 +302,7 @@ class EndpointAdminTest(BaseAdminTest):
             {"Authorization": "Bearer token"},
             {"data": "value"},
             timeout=mock.ANY,
+            commit=False,
         )
         mock_message_user.assert_called_once_with(mock_request, mock.ANY, messages.SUCCESS)
 
@@ -334,6 +336,7 @@ class EndpointAdminTest(BaseAdminTest):
             {"Authorization": "Bearer token"},
             {"data": "value"},
             timeout=mock.ANY,
+            commit=False,
         )
         mock_message_user.assert_called_once_with(mock_request, mock.ANY, messages.SUCCESS)
 

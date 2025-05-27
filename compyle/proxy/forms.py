@@ -18,10 +18,10 @@ class TraceForm(forms.ModelForm):
     class Meta:
         model = models.Trace
         fields = [
+            "authentication",
             "params",
             "headers",
             "payload",
-            "authentication",
         ]
         widgets = {
             "params": JSONEditorWidget(width="100%"),

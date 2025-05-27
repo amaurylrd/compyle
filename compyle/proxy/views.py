@@ -1,8 +1,13 @@
-from django.db.models import Prefetch
+import secrets
+
+from django.db.models import Count, F, Prefetch
 from django.db.models.query import QuerySet
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from requests_oauthlib import OAuth2Session
 from rest_framework import filters, response, status, viewsets
 from rest_framework.decorators import action
 
@@ -34,7 +39,7 @@ class ServiceViewSet(BaseModelViewSet):
         """
         queryset = super().get_queryset()
 
-        if self.request.method == "GET":
+        if self.action in ("list", "retrieve"):
             queryset.prefetch_related(
                 Prefetch(
                     "endpoints__endpoint_traces",
@@ -44,6 +49,33 @@ class ServiceViewSet(BaseModelViewSet):
 
         return queryset
 
+    @extend_schema(
+        description=_("Action to get statistics across all service traces."),
+        responses={
+            status.HTTP_200_OK: serializers.StatisticsSerializer,
+        },
+    )
+    @action(detail=False, methods=["get"], url_path="statistics", url_name="statistics")
+    def statistics(self, request, *args, **kwargs) -> response.Response:  # pylint: disable=unused-argument
+        """Custom action that returns aggregated trace status counts and other statistics.
+
+        Args:
+            request: The request object.
+
+        Returns:
+            The JSON response object with statistics.
+        """
+        status_counter = (
+            models.Trace.objects.exclude(status=None)
+            .values("status")
+            .annotate(name=F("status"), value=Count("pk"))
+            .values("name", "value")
+        )
+
+        data = {"status_counter": status_counter}
+
+        return response.Response(data, status=status.HTTP_200_OK)
+
 
 class EndpointViewSet(BaseModelViewSet):
     """Viewset for :class:`compyle.proxy.models.Service`."""
@@ -52,6 +84,8 @@ class EndpointViewSet(BaseModelViewSet):
     serializer_class = serializers.EndpointSerializer
     serializer_classes = {
         "trigger_request": serializers.RequestSerializer,
+        "authorize": serializers.AuthorizeSerialize,
+        "callback": serializers.CallbackSerializer,
     }
 
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
@@ -64,8 +98,9 @@ class EndpointViewSet(BaseModelViewSet):
         description=_("Action for triggering an endpoint request."),
         request=serializers.RequestSerializer,
         responses={
-            status.HTTP_404_NOT_FOUND: {},
             status.HTTP_202_ACCEPTED: serializers.RequestSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT,
+            status.HTTP_404_NOT_FOUND: OpenApiTypes.OBJECT,
         },
     )
     @action(detail=True, methods=["post"], url_path="request", url_name="request")
@@ -78,7 +113,7 @@ class EndpointViewSet(BaseModelViewSet):
         Returns:
             The response object.
         """
-        endpoint = self.get_object()
+        endpoint: models.Endpoint = self.get_object()
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -96,6 +131,103 @@ class EndpointViewSet(BaseModelViewSet):
         response_data["task_id"] = task.id
 
         return response.Response(response_data, status=status.HTTP_202_ACCEPTED)
+
+    @extend_schema(
+        description=_("Get authorization URL for OAuth2 flow (Authorization Code Grant)."),
+        request=serializers.AuthorizeSerialize,
+        responses={
+            status.HTTP_200_OK: serializers.AuthorizationSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT,
+            status.HTTP_404_NOT_FOUND: OpenApiTypes.OBJECT,
+        },
+    )
+    @action(detail=True, methods=["post"], url_path="authorize", url_name="authorize")
+    def authorize(self, request, *args, **kwargs) -> response.Response:  # pylint: disable=unused-argument
+        """Initiates the OAuth2 Authorization Code flow by generating an authorization URL.
+
+        This endpoint validates the provided authentication and redirect URI, then constructs an authorization URL
+        to be used in the next step of the OAuth2 flow.
+
+        Args:
+            request: The request object.
+
+        Returns:
+            The response containing the `authorization_url` and `state` token.
+        """
+        endpoint: models.Endpoint = self.get_object()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        authentication: models.Authentication = serializer.validated_data["authentication"]
+
+        redirect_uri = serializer.validated_data["redirect_uri"]
+        oauth = OAuth2Session(
+            client_id=authentication.client_id,
+            redirect_uri=redirect_uri,
+            scope=serializer.validated_data.get("scopes", []),
+        )
+
+        authorization_params = {
+            "login_hint": serializer.validated_data.get("login_hint", authentication.email),
+            "access_type": "offline",
+            "include_granted_scopes": "true",
+            "prompt": "consent",
+        }
+
+        authorization_url, oauth_state = oauth.authorization_url(
+            endpoint.service.auth_url,
+            state=serializer.validated_data.get("state") or secrets.token_urlsafe(32),
+            **authorization_params,
+        )
+
+        authentication.state = oauth_state
+        authentication.redirect_uri = redirect_uri
+        authentication.save(update_fields=["state ", "redirect_uri"])
+
+        serializer = serializers.AuthorizationSerializer(
+            {
+                "authorization_url": authorization_url,
+                "state": oauth_state,
+            }
+        )
+
+        return response.Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        description=_("Handle the OAuth2 callback by validating the authorization code and state."),
+        request=serializers.CallbackSerializer,
+        responses={
+            status.HTTP_200_OK: OpenApiTypes.NONE,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT,
+            status.HTTP_404_NOT_FOUND: OpenApiTypes.OBJECT,
+        },
+    )
+    @action(detail=False, methods=["get"], url_path="callback", url_name="callback")
+    def callback(self, request, *args, **kwargs) -> response.Response:  # pylint: disable=unused-argument
+        """OAuth2 callback endpoint that receives the authorization code and state token.
+
+        This endpoint validates the query parameters returned from the OAuth2 provider
+        and associates the authorization code with the corresponding authentication entry.
+
+        Args:
+            request: The request object containing query parameters `code` and `state`.
+
+        Returns:
+            A 200 OK response if the authorization code is successfully saved.
+        """
+        serializer = self.get_serializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        code = serializer.validated_data["code"]
+        state = serializer.validated_data["state"]
+
+        authentication = get_object_or_404(models.Authentication, state=state)
+
+        authentication.authorization_code = code
+        authentication.save(update_fields=["authorization_code"])
+
+        return response.Response(status=status.HTTP_200_OK)
 
 
 class TraceViewSet(viewsets.ReadOnlyModelViewSet[models.Trace]):
@@ -121,5 +253,5 @@ class AuthenticationViewSet(BaseModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     # filterset_class = filtersets.AuthenticationFilterSet # TODO
 
-    search_fields = ["reference", "email"]
+    search_fields = ["reference", "email", "state"]
     ordering_fields = ["reference", "created_at", "updated_at"]

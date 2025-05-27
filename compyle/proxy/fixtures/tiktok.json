@@ -1,0 +1,15 @@
+[
+    {
+        "model": "proxy.service",
+        "pk": "4234918f-b8c7-4f9d-8050-6a88c1ea1a42",
+        "fields": {
+            "name": "Tiktok",
+            "documentation_url": "https://developers.tiktok.com/doc/login-kit-web",
+            "trailing_slash": false,
+            "auth_flow": "",
+            "token_url": "",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    }
+]

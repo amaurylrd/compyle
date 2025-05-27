@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Any
 
 import requests
@@ -20,6 +21,13 @@ class Service(BaseModel, CreateUpdateMixin):
         help_text=_("The name of the service, for a more human display."),
         max_length=100,
     )
+    documentation_url = models.URLField(
+        verbose_name=_("documentation URL"),
+        help_text=_("The URL of the API documentation."),
+        default=None,
+        null=True,
+        blank=True,
+    )
     trailing_slash = models.BooleanField(
         verbose_name=_("trailing slash"),
         help_text=_("Whether to append or not a trailing slash to the url."),
@@ -37,15 +45,18 @@ class Service(BaseModel, CreateUpdateMixin):
     )
     token_url = models.URLField(
         verbose_name=_("token URL"),
-        help_text=_("The URL to be used to request or refresh the user token"),
+        help_text=_("The URL to be used to request or refresh the user token."),
         default=None,
         null=True,
         blank=True,
     )
-    # todo faire un validators token_url
-
-    # todo refresh_token_url
-    # todo auth_config
+    auth_url = models.URLField(
+        verbose_name=_("authorization URL"),
+        help_text=_("The URL to be used to get the user authorization code."),
+        default=None,
+        null=True,
+        blank=True,
+    )
 
     endpoints: models.QuerySet["Endpoint"]
 
@@ -113,9 +124,25 @@ class Endpoint(BaseModel, CreateUpdateMixin):
     def __str__(self) -> str:
         return str(self.name)
 
-    # TODO build_header Accept: application/xml
-    # TODO build_header Content-Type: application/json
-    # TODO build_header Authorization
+    def update_headers(self, headers: dict[str, str]) -> None:
+        """Build headers appropriate Content-Type and Accept headers properties based on the expected response type.
+
+        Args:
+            headers: The headers specified by the user.
+        """
+        if self.response_type == choices.ResponseType.JSON:
+            content_type = "application/json"
+        elif self.response_type == choices.ResponseType.XML:
+            content_type = "application/xml"
+        else:
+            content_type = "text/plain"
+
+        headers.update(
+            {
+                "Content-Type": content_type,
+                "Accept": content_type,
+            }
+        )
 
     def build_url(self, **params) -> str:
         """Builds the URL for the specified queryset.
@@ -133,6 +160,7 @@ class Endpoint(BaseModel, CreateUpdateMixin):
         url: str,
         headers: dict[str, str] = None,
         body: dict[str, Any] = None,
+        **kwargs,
     ) -> requests.Response:
         """Request the endpoint with the specified parameters.
 
@@ -140,11 +168,12 @@ class Endpoint(BaseModel, CreateUpdateMixin):
             url: The URL to be used for the request.
             headers: The headers to be used for the request. Defaults to None.
             body: The body to be used for the request. Defaults to None.
+            **kwargs: Additional arguments for `requests.request`, such as `timeout`, `auth`, `json`, `cookies`...
 
         Returns:
             The response of the request.
         """
-        return request_with_retry(choices.HttpMethod(self.method), url, headers=headers, data=body)
+        return request_with_retry(choices.HttpMethod(self.method), url, headers=headers, data=body, **kwargs)
 
     def parse_response(self, response: requests.Response) -> Any:
         """Parse the response based on the expected content type.
@@ -190,6 +219,15 @@ class Trace(BaseModel):
         null=True,
         blank=True,
     )
+    status = models.CharField(
+        verbose_name=_("status"),
+        help_text=_("The status of the request response."),
+        max_length=3,
+        choices=choices.HttpStatus.choices,
+        null=True,
+        blank=True,
+        default=None,
+    )
     status_code = models.IntegerField(
         verbose_name=_("status code"),
         help_text=_("The status code of the request response."),
@@ -207,6 +245,13 @@ class Trace(BaseModel):
     payload = models.JSONField(
         verbose_name=_("payload"),
         help_text=_("The body of the request JSON-formatted."),
+        default=None,
+        blank=True,
+        null=True,
+    )
+    response = models.CharField(
+        verbose_name=_("response"),
+        help_text=_("The parsed response based on the expected content type."),
         default=None,
         blank=True,
         null=True,
@@ -234,14 +279,22 @@ class Trace(BaseModel):
         verbose_name_plural = _("traces")
         ordering = ["started_at"]
 
+    def save(self, *args, **kwargs) -> None:
+        """Overrides the default save method to automatically update the `status` field
+        based on the current `status_code` before saving the model instance.
+        """
+        if self.status_code is not None:
+            self.status = choices.HttpStatus.from_status_code(self.status_code).value
+
+        super().save(*args, **kwargs)
+
 
 class Authentication(BaseModel, CreateUpdateMixin):
     """This class represents an authentication to be used for a specific endpoint call."""
 
     email = models.CharField(
         verbose_name=_("email"),
-        help_text=_("The user unique email."),
-        unique=True,
+        help_text=_("The user email."),
         max_length=255,
     )
     login = encrypt(
@@ -294,20 +347,40 @@ class Authentication(BaseModel, CreateUpdateMixin):
             blank=True,
         )
     )
-
-    # TODO
-    # autorization_code (add encrypt?)
-    # token_type
-    # redirect_uri
-
-    # todo add encrypt ?
-    access_token = models.CharField(
-        verbose_name=_("access token"),
-        help_text=_("The access token to be used for authentication."),
-        max_length=512,
-        default=None,
-        null=True,
+    state = models.CharField(
+        verbose_name=_("state"),
+        help_text=_("The OAuth2 state to maintain state between authorization request and callback."),
+        max_length=64,
         blank=True,
+        null=True,
+        unique=True,
+    )
+    redirect_uri = models.URLField(
+        verbose_name=_("redirect URI"),
+        help_text=_("One of the OAuth2 redirect URIs listed for the given client_id."),
+        default=None,
+        blank=True,
+        null=True,
+    )
+    authorization_code = encrypt(
+        models.CharField(
+            verbose_name=_("authorization code"),
+            help_text=_("The code received from OAuth2 provider to exchange for access token."),
+            max_length=255,
+            default=None,
+            blank=True,
+            null=True,
+        )
+    )
+    access_token = encrypt(
+        models.CharField(
+            verbose_name=_("access token"),
+            help_text=_("The access token to be used for authentication."),
+            max_length=512,
+            default=None,
+            null=True,
+            blank=True,
+        )
     )
     expires_at = models.DateTimeField(
         verbose_name=("expires at"),
@@ -316,13 +389,15 @@ class Authentication(BaseModel, CreateUpdateMixin):
         blank=True,
         null=True,
     )
-    refresh_token = models.CharField(
-        verbose_name=_("refresh token"),
-        help_text=_("The refresh token to be used for refreshing the access token."),
-        max_length=512,
-        default=None,
-        null=True,
-        blank=True,
+    refresh_token = encrypt(
+        models.CharField(
+            verbose_name=_("refresh token"),
+            help_text=_("The refresh token to be used for refreshing the access token."),
+            max_length=512,
+            default=None,
+            null=True,
+            blank=True,
+        )
     )
 
     auth_traces: models.QuerySet["Trace"]
@@ -334,7 +409,7 @@ class Authentication(BaseModel, CreateUpdateMixin):
     def __str__(self) -> str:
         return str(self.email)
 
-    @property
+    @cached_property
     @admin.display(description=_("is token valid"), boolean=True)
     def is_token_valid(self) -> bool:
         """Check whether the access token is still valid.
@@ -353,4 +428,4 @@ class Authentication(BaseModel, CreateUpdateMixin):
         self.access_token = token["access_token"]
         self.refresh_token = token.get("refresh_token")
         self.expires_at = timezone.now() + timezone.timedelta(seconds=token.get("expires_in", 3600))
-        self.save()
+        self.save(update_fields=["access_token", "refresh_token", "expires_at"])

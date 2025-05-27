@@ -16,6 +16,6 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("proxy/", include((proxy_urlpatterns, "proxy"), namespace="proxy")),
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
-    path(".well-known/openapi", SpectacularAPIView.as_view(api_version=__version__), name="schema"),
+    path(".well-known/openapi/", SpectacularAPIView.as_view(api_version=__version__), name="schema"),
     path(".well-known/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]

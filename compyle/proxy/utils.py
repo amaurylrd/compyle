@@ -73,6 +73,7 @@ def normalize_url(url: str, trailling_slash: bool) -> str:
 
     if trailling_slash and not path.endswith("/"):
         path += "/"
+
     if not trailling_slash and path.endswith("/"):
         path = path.rstrip("/")
 
@@ -87,7 +88,7 @@ def request_with_retry(
     backoff: float | None = 0.5,
     jitter: float | None = 0.5,
     timeout: float | None = None,
-    **request_params,
+    **kwargs,
 ) -> requests.Response:
     """Requests the specified url with the specified HTTP method and query parameters.
 
@@ -98,7 +99,7 @@ def request_with_retry(
         backoff: the backoff factor in seconds. Defaults to 0.5.
         jitter: the backoff jitter in seconds. Defaults to 0.5.
         timeout: the request timeout in seconds. Defaults to None.
-        **request_params: the parameters to be used for the HTTP request.
+        **kwargs: the parameters to be used for the HTTP request.
 
     Raises:
         requests.exceptions.RequestException: if the request fails.
@@ -125,7 +126,7 @@ def request_with_retry(
         session.mount("https://", adapter)
 
         try:
-            response: requests.Response = method(url, **request_params, timeout=timeout)
+            response: requests.Response = method(url, **kwargs, timeout=timeout)
             response.raise_for_status()
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
             pass
