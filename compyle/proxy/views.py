@@ -64,6 +64,7 @@ class EndpointViewSet(BaseModelViewSet):
         description=_("Action for triggering an endpoint request."),
         request=serializers.RequestSerializer,
         responses={
+            status.HTTP_400_BAD_REQUEST: {},
             status.HTTP_404_NOT_FOUND: {},
             status.HTTP_202_ACCEPTED: serializers.RequestSerializer,
         },
