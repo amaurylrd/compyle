@@ -45,7 +45,7 @@ toml = "^0.10.2"
 tomli = "^2.0.1"
 
 celery = "^5.4"
-redis = "^5.0.8"
+redis = "^6.0.0"
 cachetools = "^5.5.0"
 setuptools = "^78.1.1"
 
