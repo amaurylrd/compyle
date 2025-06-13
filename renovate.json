@@ -12,6 +12,10 @@
     {
       "matchPackageNames": ["python", "django"],
       "enabled": false
+    },
+    {
+      "matchManagers": ["poetry"],
+      "versioning": "1.3.2"
     }
   ]
 }
