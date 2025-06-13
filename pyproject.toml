@@ -86,7 +86,7 @@ pyupgrade = "^3.3.1"
 
 [tool.poetry.group.docs.dependencies]
 m2r2 = "^0.3"
-sphinx = "^7.2"
+sphinx = "^8.0.0"
 sphinx-autoapi = "^3.0.0"
 sphinx-rtd-theme = "^3.0.0"
 sphinxcontrib-django = "^2.2"
