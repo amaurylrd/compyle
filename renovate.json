@@ -7,11 +7,16 @@
         "poetry",
         "pre-commit"
     ],
-    "baseBranches": ["alpha"],
+    "baseBranchPatterns": [
+        "alpha"
+    ],
     "packageRules": [
-    {
-      "matchPackageNames": ["python", "django"],
-      "enabled": false
-    }
-  ]
+        {
+            "matchPackageNames": [
+                "python",
+                "django"
+            ],
+            "enabled": false
+        }
+    ]
 }
