@@ -64,7 +64,7 @@ optional = true
 pre-commit = "^4.0.0"
 
 [tool.poetry.group.lint.dependencies]
-bandit = "1.7.7"
+bandit = "1.9.4"
 mypy = "^1.11.2"
 black = "^25.0.0"
 
