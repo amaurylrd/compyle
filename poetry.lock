@@ -873,15 +873,19 @@ files = [
 
 [[package]]
 name = "django-object-actions"
-version = "4.3.0"
+version = "5.1.2"
 description = "A Django app for adding object tools for models in the admin"
 optional = false
-python-versions = "<4.0,>=3.7"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "django_object_actions-4.3.0-py3-none-any.whl", hash = "sha256:1af87dedcfd5a35207a4b90c386c059e5f02ecf1d954e3131e25f4a04d01c963"},
-    {file = "django_object_actions-4.3.0.tar.gz", hash = "sha256:611f768d768c9ca7b48278573feb7c07966174f5c50a9323ab4d02d0c4b7501e"},
+    {file = "django_object_actions-5.1.2-py3-none-any.whl", hash = "sha256:366dcd5ccfb3ef6a16ce4c147be8df2a35b52d637eb36fb9c558e28419ae4038"},
+    {file = "django_object_actions-5.1.2.tar.gz", hash = "sha256:a11ac544e5beb6b309a50e184a2086e1e18f6469704d9609bbe083a8972a2245"},
 ]
+
+[package.extras]
+build = ["build", "twine"]
+dev = ["Django (>=4.2)", "coverage (==7.*)", "dj-database-url (==2.*)", "django-extensions (==3.*)", "factory-boy (==3.*)", "ruff"]
 
 [[package]]
 name = "django-stubs"
@@ -3235,4 +3239,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "~3.10"
-content-hash = "6732f48f75c0295ff1f6d29eeea95e8eb5e63450ea6e44abfeefb22dc2beb504"
+content-hash = "ecdae987aeee60cbdabba6b60665dff30a8b1dbcdfc9051d660feebd3c71cc3f"
