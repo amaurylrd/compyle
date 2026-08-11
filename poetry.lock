@@ -885,40 +885,39 @@ files = [
 
 [[package]]
 name = "django-stubs"
-version = "5.2.0"
+version = "6.0.9"
 description = "Mypy stubs for Django"
 optional = false
 python-versions = ">=3.10"
 groups = ["lint"]
 files = [
-    {file = "django_stubs-5.2.0-py3-none-any.whl", hash = "sha256:cd52da033489afc1357d6245f49e3cc57bf49015877253fb8efc6722ea3d2d2b"},
-    {file = "django_stubs-5.2.0.tar.gz", hash = "sha256:07e25c2d3cbff5be540227ff37719cc89f215dfaaaa5eb038a75b01bbfbb2722"},
+    {file = "django_stubs-6.0.9-py3-none-any.whl", hash = "sha256:dbee54721197b453708b39bb6b5988b6543eddf3e5073b8772c13bf4652af17d"},
+    {file = "django_stubs-6.0.9.tar.gz", hash = "sha256:ef9928e900a9d226162b579b50c035d08755f6279fd47de9f427de4123c23623"},
 ]
 
 [package.dependencies]
-asgiref = "*"
 django = "*"
-django-stubs-ext = ">=5.2.0"
-mypy = {version = ">=1.13,<1.16", optional = true, markers = "extra == \"compatible-mypy\""}
-tomli = {version = "*", markers = "python_version < \"3.11\""}
-types-PyYAML = "*"
+django-stubs-ext = ">=6.0.2"
+mypy = {version = ">=1.13,<2.4", optional = true, markers = "extra == \"compatible-mypy\""}
+tomli = {version = "*", markers = "python_full_version < \"3.11.0\""}
+types-pyyaml = "*"
 typing-extensions = ">=4.11.0"
 
 [package.extras]
-compatible-mypy = ["mypy (>=1.13,<1.16)"]
+compatible-mypy = ["mypy (>=1.13,<2.4)"]
 oracle = ["oracledb"]
-redis = ["redis"]
+redis = ["redis", "types-redis"]
 
 [[package]]
 name = "django-stubs-ext"
-version = "5.2.0"
+version = "6.0.9"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
 python-versions = ">=3.10"
 groups = ["lint"]
 files = [
-    {file = "django_stubs_ext-5.2.0-py3-none-any.whl", hash = "sha256:b27ae0aab970af4894ba4e9b3fcd3e03421dc8731516669659ee56122d148b23"},
-    {file = "django_stubs_ext-5.2.0.tar.gz", hash = "sha256:00c4ae307b538f5643af761a914c3f8e4e3f25f4e7c6d7098f1906c0d8f2aac9"},
+    {file = "django_stubs_ext-6.0.9-py3-none-any.whl", hash = "sha256:267cb4d0bc87a6c2a0edd0f0dfa59696efd3d21a86b1d346b502fe13c6ea28ef"},
+    {file = "django_stubs_ext-6.0.9.tar.gz", hash = "sha256:6777de6d0a059f55ea1d53839de84c2ae96eae131b75fd00c3ee8f6678d9f6d7"},
 ]
 
 [package.dependencies]
